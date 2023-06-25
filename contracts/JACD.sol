@@ -102,7 +102,7 @@ contract JACD {
     {
         require(_amount > 0, 'JACD: proposal amount of 0');
         require(_amount <= usdcBalance / 10, 'JACD: proposal exceeds 10% limit');
-        //require(!_description, 'JACD: no proposal description');  HOW TO DO THIS?  DOES IT NEED DONE AT ALL/ON BACKEND?
+        require(bytes(_description).length > 0, 'JACD: no proposal description');
         require(_recipient != address(0), 'JACD: invalid proposal recipient address');
 
         proposalCount++;

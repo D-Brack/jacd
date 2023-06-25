@@ -1,4 +1,3 @@
-const { hover } = require('@testing-library/user-event/dist/hover')
 const { expect } = require('chai')
 const { ethers } = require('hardhat')
 
@@ -180,7 +179,6 @@ describe('JACD', () => {
       })
 
       it('rejects proposals from non-holders', async () => {
-        //TEST THIS IS ACTUALLY TESTING FOR HOLDERS ONCE NFTS ARE INCORPORATED
         await expect(jacdDAO.connect(user).createProposal(
           deployer.address,
           tokens(.1),
@@ -201,6 +199,14 @@ describe('JACD', () => {
           user.address,
           AMOUNT,
           'Prop 1'
+        )).to.be.reverted
+      })
+
+      it('rejects proposals with no descritpion', async () => {
+        await expect(jacdDAO.connect(deployer).createProposal(
+          user.address,
+          tokens(.1),
+          ''
         )).to.be.reverted
       })
 
