@@ -1,0 +1,20 @@
+{
+  "31337" : {
+    "jacdToken" : {
+      "address" : ""
+    },
+    "jacdDAO" : {
+      "address" : ""
+    },
+    "usdcToken" : ""
+  },
+  "11155111" : {
+    "jacdToken" : {
+      "address" : ""
+    },
+    "jacdDAO" : {
+      "address" : ""
+    },
+    "usdcToken" : ""
+  }
+}

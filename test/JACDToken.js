@@ -1,14 +1,14 @@
-const { expect } = require('chai')
-const { ethers } = require('hardhat')
-const { CompilationJobCreationErrorReason } = require('hardhat/types')
+const { expect } = require('chai');
+const { ethers } = require('hardhat');
 
-const tokens = (amount) => {
-  return ethers.utils.parseUnits(amount.toString(), 'ether')
+const tokens = (n) => {
+  return ethers.parseUnits(n.toString(), 'ether')
 }
 
 describe('JACD Token', () => {
   const NAME = 'Jadu Avas Charities DAO'
   const SYMBOL = 'JACD'
+  const AMOUNT = tokens(1)
 
   let jacd, owner, user, transaction, result
 
@@ -27,8 +27,8 @@ describe('JACD Token', () => {
       expect(await jacd.symbol()).to.equal(SYMBOL)
     })
 
-    it('returns 0 decimals for tokens', async () => {
-      expect(await jacd.decimals()).to.equal(0)
+    it('returns decimals of 18', async () => {
+      expect(await jacd.decimals()).to.equal(18)
     })
 
     it('sets token total supply to 0', async () => {
@@ -39,27 +39,36 @@ describe('JACD Token', () => {
   describe('Minting', () => {
     describe('Success', () => {
       beforeEach(async () => {
-        transaction = await jacd.connect(owner).mint(user.address, 1)
+        transaction = await jacd.connect(owner).mint(user.address, AMOUNT)
         await transaction.wait()
       })
 
       it('increases total supply', async () => {
-        expect(await jacd.totalSupply()).to.equal(1)
+        expect(await jacd.totalSupply()).to.equal(AMOUNT)
       })
 
       it('increases user balance', async () => {
-        expect(await jacd.balanceOf(user.address)).to.equal(1)
+        expect(await jacd.balanceOf(user.address)).to.equal(AMOUNT)
       })
     })
 
     describe('Failure', () => {
       it('rejects invalid receiver address', async () => {
-        await expect(jacd.connect(owner).mint('0x0000000000000000000000000000000000000000', 1)).to.be.reverted
+        await expect(jacd.connect(owner).mint('0x0000000000000000000000000000000000000000', AMOUNT)).to.be.reverted
       })
 
       it('rejects calls from non-owner', async () => {
-        await expect(jacd.connect(user).mint(owner.address, 1)).to.be.reverted
+        await expect(jacd.connect(user).mint(owner.address, AMOUNT)).to.be.reverted
       })
+    })
+  })
+
+  describe('Transfer Ownership', () => {
+    it('sets new contract owner', async () => {
+      transaction = await jacd.connect(owner).transferOwnership(user.address)
+      await transaction.wait()
+
+      expect(await jacd.owner()).to.equal(user.address)
     })
   })
 })
