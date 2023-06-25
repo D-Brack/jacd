@@ -138,7 +138,7 @@ describe('JACD', () => {
         transaction = await avas.connect(deployer).mint(1, { value: ether(.01) })
         await transaction.wait()
 
-        transaction = await jacdDAO.connect(deployer).createProposal(user.address, tokens(.1), 'Prop 024')
+        transaction = await jacdDAO.connect(deployer).createProposal(user.address, tokens(.1), 'Prop 1')
         await transaction.wait()
       })
 
@@ -149,7 +149,7 @@ describe('JACD', () => {
         expect(proposal.index).to.equal(1)
         expect(proposal.recipient).to.equal(user.address)
         expect(proposal.amount).to.equal(tokens(.1))
-        expect(proposal.description).to.equal('Prop 024')
+        expect(proposal.description).to.equal('Prop 1')
       })
 
       it('emits a Propose event', async () => {
@@ -157,7 +157,7 @@ describe('JACD', () => {
           1,
           user.address,
           tokens(.1),
-          'Prop 024',
+          'Prop 1',
           deployer.address,
           (await ethers.provider.getBlock(await ethers.provider.getBlockNumber())).timestamp
         )
@@ -184,7 +184,7 @@ describe('JACD', () => {
         await expect(jacdDAO.connect(user).createProposal(
           deployer.address,
           tokens(.1),
-          'Prop 024'
+          'Prop 1'
         )).to.be.reverted
       })
 
@@ -192,7 +192,7 @@ describe('JACD', () => {
         await expect(jacdDAO.connect(deployer).createProposal(
           user.address,
           0,
-          'Prop 024'
+          'Prop 1'
         )).to.be.reverted
       })
 
@@ -200,7 +200,7 @@ describe('JACD', () => {
         await expect(jacdDAO.connect(deployer).createProposal(
           user.address,
           AMOUNT,
-          'Prop 024'
+          'Prop 1'
         )).to.be.reverted
       })
 
@@ -208,7 +208,7 @@ describe('JACD', () => {
         await expect(jacdDAO.connect(deployer).createProposal(
           '0x0000000000000000000000000000000000000000',
           AMOUNT,
-          'Prop 024'
+          'Prop 1'
         )).to.be.reverted
       })
     })
