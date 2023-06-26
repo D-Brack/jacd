@@ -20,11 +20,19 @@ contract JACD {
     uint256 public proposalCount;
     mapping(uint256 => Proposal) public proposals;
 
+    mapping(uint256 => mapping(address => bool)) public holderVoted;
+
+    enum VoteStage {Holder, All, Finalized, Failed}
+
     struct Proposal {
         uint256 index;
         address recipient;
         uint256 amount;
         string description;
+        uint256 votesFor;
+        uint256 votesAgainst;
+        VoteStage stage;
+        uint256 voteEnd;
     }
 
     event Deposit(
@@ -39,6 +47,14 @@ contract JACD {
         uint256 amount,
         string description,
         address creator,
+        uint256 timestamp
+    );
+
+    event Vote(
+        uint256 proposal,
+        address voter,
+        bool voteFor,
+        uint256 votes,
         uint256 timestamp
     );
 
@@ -67,7 +83,6 @@ contract JACD {
 
     receive() external payable {}
 
-    // Receive usdc deposits & Distribute tokens
     function receiveDeposit(uint256 _amount) public {
         require(_amount > 0, 'JACD: deposit amount of 0');
         require(
@@ -91,7 +106,6 @@ contract JACD {
         jacdSupply += _amount;
     }
 
-    // Receive proposals
     function createProposal(
         address _recipient,
         uint256 _amount,
@@ -112,10 +126,13 @@ contract JACD {
         proposal.recipient = _recipient;
         proposal.amount = _amount;
         proposal.description = _description;
+        proposal.votesFor = 0;
+        proposal.votesAgainst = 0;
+        proposal.stage = VoteStage.Holder;
+        proposal.voteEnd = block.timestamp + 604800;
 
         proposals[proposalCount] = proposal;
 
-        //emit new proposal event
         emit Propose(proposalCount,
             _recipient,
             _amount,
@@ -125,8 +142,43 @@ contract JACD {
         );
     }
 
-    // Handle votes (call votes contracts? or let votes contracts handle it all?)
-        // Burn tokens used to vote
+    function holdersVote(uint256 _index, bool _voteFor) public onlyHolders {
+        require(proposals[_index].stage == VoteStage.Holder, 'JACD: not in holder voting stage');
+        require(holderVoted[_index][msg.sender] == false, 'JACD: holder already voted');
+        require(proposals[_index].voteEnd > block.timestamp, 'JACD: holder voting expired');
+
+        uint256 votes;
+
+        if (jetpacks.balanceOf(msg.sender) > 0) {
+            votes += jetpacks.balanceOf(msg.sender) * 66666;
+        }
+        if (hoverboards.balanceOf(msg.sender) > 0) {
+            votes += hoverboards.balanceOf(msg.sender) * 11111;
+        }
+        if (avas.balanceOf(msg.sender) > 0) {
+            votes += avas.balanceOf(msg.sender) * 6666;
+        }
+
+        if (_voteFor) {
+            proposals[_index].votesFor += votes;
+        } else {
+            proposals[_index].votesAgainst += votes;
+        }
+
+        holderVoted[_index][msg.sender] = true;
+
+        emit Vote(_index, msg.sender, _voteFor, votes, block.timestamp);
+    }
+
+    function finalizeHoldersVote() public onlyHolders {
+        //vote end time must have passed
+
+        //if > 50% total votes were submitted and votesFor > votesAgainst...
+
+
+
+        //else - votes fails
+    }
 
     // Finalize proposals & distribute funds
 

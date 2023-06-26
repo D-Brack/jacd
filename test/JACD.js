@@ -1,5 +1,6 @@
 const { expect } = require('chai')
 const { ethers } = require('hardhat')
+const { time } = require('@nomicfoundation/hardhat-toolbox/network-helpers')
 
 const tokens = (amount) => {
   return ethers.parseUnits(amount.toString(), 'ether')
@@ -149,6 +150,13 @@ describe('JACD', () => {
         expect(proposal.recipient).to.equal(user.address)
         expect(proposal.amount).to.equal(tokens(.1))
         expect(proposal.description).to.equal('Prop 1')
+        expect(proposal.votesFor).to.equal(0)
+        expect(proposal.votesAgainst).to.equal(0)
+        expect(proposal.stage).to.equal(0)
+        expect(proposal.voteEnd).to.equal(
+          (await ethers.provider.getBlock(await ethers.provider.getBlockNumber()))
+          .timestamp + 604800
+        )
       })
 
       it('emits a Propose event', async () => {
@@ -216,6 +224,98 @@ describe('JACD', () => {
           AMOUNT,
           'Prop 1'
         )).to.be.reverted
+      })
+    })
+  })
+
+  describe('Holder Voting', () => {
+    describe('Success', () => {
+      beforeEach(async () => {
+        transaction = await usdcToken.connect(user).approve(jacdDAO.target, AMOUNT)
+        await transaction.wait()
+
+        transaction = await jacdDAO.connect(user).receiveDeposit(AMOUNT)
+        await transaction.wait()
+
+        transaction = await avas.connect(deployer).addToWhitelist(deployer.address)
+        await transaction.wait()
+
+        transaction = await avas.connect(deployer).mint(1, { value: ether(.01) })
+        await transaction.wait()
+
+        transaction = await jetpacks.connect(deployer).addToWhitelist(user.address)
+        await transaction.wait()
+
+        transaction = await jetpacks.connect(user).mint(1, { value: ether(.01) })
+        await transaction.wait()
+
+        transaction = await jacdDAO.connect(deployer).createProposal(user.address, tokens(.1), 'Prop 1')
+        await transaction.wait()
+
+        transaction = await jacdDAO.connect(deployer).holdersVote(1, true)
+        await transaction.wait()
+
+        transaction = await jacdDAO.connect(user).holdersVote(1, false)
+        await transaction.wait()
+      })
+
+      it('records holder votes', async () => {
+        const proposal = await jacdDAO.proposals(1)
+        expect(proposal.votesFor).to.equal(6666)
+        expect(proposal.votesAgainst).to.equal(66666)
+
+        expect(await jacdDAO.holderVoted(1, deployer.address)).to.equal(true)
+        expect(await jacdDAO.holderVoted(1, user.address)).to.equal(true)
+      })
+
+      it('emits a Vote event', async () => {
+        await expect(transaction).to.emit(jacdDAO, 'Vote').withArgs(
+          1,
+          user.address,
+          false,
+          66666,
+          (await ethers.provider.getBlock(await ethers.provider.getBlockNumber())).timestamp
+        )
+      })
+    })
+
+    describe('Failure', () => {
+      beforeEach(async () => {
+        transaction = await usdcToken.connect(user).approve(jacdDAO.target, AMOUNT)
+        await transaction.wait()
+
+        transaction = await jacdDAO.connect(user).receiveDeposit(AMOUNT)
+        await transaction.wait()
+
+        transaction = await avas.connect(deployer).addToWhitelist(deployer.address)
+        await transaction.wait()
+
+        transaction = await avas.connect(deployer).mint(1, { value: ether(.01) })
+        await transaction.wait()
+
+        transaction = await jacdDAO.connect(deployer).createProposal(user.address, tokens(.1), 'Prop 1')
+        await transaction.wait()
+      })
+
+      it('rejects votes from non-holders', async () => {
+        await expect(jacdDAO.connect(user).holdersVote(1, false)).to.be.reverted
+      })
+
+      // COME BACK TO THIS AFTER HOLDER FINALIZATION IS COMPLETE???
+      it('rejects proposals not in holder stage', async () => {
+      })
+
+      it('rejects holders voting twice', async () => {
+        transaction = await jacdDAO.connect(deployer).holdersVote(1, true)
+        await transaction.wait()
+
+        await expect(jacdDAO.connect(deployer).holdersVote(1, true)).to.be.reverted
+      })
+
+      it('rejects voting after end time', async () => {
+        await time.increase(604801)
+
+        await expect(jacdDAO.connect(deployer).holdersVote(1, true)).to.be.reverted
       })
     })
   })
