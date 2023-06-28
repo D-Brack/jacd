@@ -31,13 +31,13 @@ describe('JACD', () => {
     await transaction.wait()
 
     const Jetpacks = await ethers.getContractFactory('NFT')
-    jetpacks = await Jetpacks.deploy('Jetpacks', 'JP', ether(.01), 10, Date.now().toString().slice(0, 10), 'x', 2)
+    jetpacks = await Jetpacks.deploy('Jetpacks', 'JP', ether(.01), 1111, Date.now().toString().slice(0, 10), 'x', 1111)
 
     const Hoverboards = await ethers.getContractFactory('NFT')
-    hoverboards = await Hoverboards.deploy('Hoverboards', 'HB', ether(.01), 10, Date.now().toString().slice(0, 10), 'y', 2)
+    hoverboards = await Hoverboards.deploy('Hoverboards', 'HB', ether(.01), 6666, Date.now().toString().slice(0, 10), 'y', 6666)
 
     const AVAs = await ethers.getContractFactory('NFT')
-    avas = await AVAs.deploy('AVAs', 'AVA', ether(.01), 10, Date.now().toString().slice(0, 10), 'z', 2)
+    avas = await AVAs.deploy('AVAs', 'AVA', ether(.01), 11111, Date.now().toString().slice(0, 10), 'z', 11111)
 
     const JACDDAO = await ethers.getContractFactory('JACD')
     jacdDAO = await JACDDAO.deploy(jacdToken.target, usdcToken.target, jetpacks.target, hoverboards.target, avas.target)
@@ -316,6 +316,184 @@ describe('JACD', () => {
         await time.increase(604801)
 
         await expect(jacdDAO.connect(deployer).holdersVote(1, true)).to.be.reverted
+      })
+    })
+  })
+
+  describe('Finalizing Holder Vote', () => {
+    describe('Success', () => {
+      beforeEach(async () => {
+        transaction = await usdcToken.connect(user).approve(jacdDAO.target, AMOUNT)
+        await transaction.wait()
+
+        transaction = await jacdDAO.connect(user).receiveDeposit(AMOUNT)
+        await transaction.wait()
+
+        transaction = await jetpacks.connect(deployer).addToWhitelist(deployer.address)
+        await transaction.wait()
+
+        transaction = await hoverboards.connect(deployer).addToWhitelist(deployer.address)
+        await transaction.wait()
+      })
+
+      describe('Passing Proposals', () => {
+        beforeEach(async () => {
+          transaction = await jetpacks.connect(deployer).mint(1111, { value: ether(11.11) })
+          await transaction.wait()
+
+          transaction = await hoverboards.connect(deployer).mint(3334, { value: ether(33.34) })
+          await transaction.wait()
+
+          transaction = await jacdDAO.connect(deployer).createProposal(user.address, tokens(.1), 'Prop 1')
+          await transaction.wait()
+        })
+
+        it('allows proposals with all votes submitted to be finalized', async () => {
+          transaction = await avas.connect(deployer).addToWhitelist(deployer.address)
+          await transaction.wait()
+
+          transaction = await hoverboards.connect(deployer).mint(3332, {value: ether(33.32)})
+          await transaction.wait()
+
+          transaction = await avas.connect(deployer).mint(11111, {value: ether(111.11)})
+          await transaction.wait()
+
+          transaction = await jacdDAO.connect(deployer).holdersVote(1, true)
+          await transaction.wait()
+
+          transaction = await jacdDAO.connect(deployer).finalizeHoldersVote(1)
+          await transaction.wait()
+
+          await expect(transaction).to.emit(jacdDAO, 'VotePass')
+        })
+
+        it('resets proposal for next voting stage', async () => {
+          transaction = await jacdDAO.connect(deployer).holdersVote(1, true)
+          await transaction.wait()
+
+          time.increase(604801)
+
+          transaction = await jacdDAO.connect(deployer).finalizeHoldersVote(1)
+          await transaction.wait()
+
+          let proposal = await jacdDAO.proposals(1)
+
+          expect(proposal.stage).to.equal(1)
+          expect(proposal.votesFor).to.equal(0)
+          expect(proposal.votesAgainst).to.equal(0)
+          expect(proposal.voteEnd).to.equal(
+            (await ethers.provider.getBlock(await ethers.provider.getBlockNumber())).timestamp + 1209599
+          )
+        })
+
+        it('emits a VotePass event', async () => {
+          transaction = await jacdDAO.connect(deployer).holdersVote(1, true)
+          await transaction.wait()
+
+          time.increase(604801)
+
+          transaction = await jacdDAO.connect(deployer).finalizeHoldersVote(1)
+          await transaction.wait()
+
+          await expect(transaction).to.emit(jacdDAO, 'VotePass').withArgs(
+            1,
+            0,
+            111110000,
+            0
+          )
+        })
+      })
+
+      describe('Failing Proposals', () => {
+        it('fails a proposal with less than 50% total votes', async () => {
+          transaction = await jetpacks.connect(deployer).mint(1, { value: ether(.01) })
+          await transaction.wait()
+
+          transaction = await jacdDAO.connect(deployer).createProposal(user.address, tokens(.1), 'Prop 1')
+          await transaction.wait()
+
+          transaction = await jacdDAO.connect(deployer).holdersVote(1, true)
+          await transaction.wait()
+
+          time.increase(604801)
+
+          transaction = await jacdDAO.connect(deployer).finalizeHoldersVote(1)
+          await transaction.wait()
+
+          let proposal = await jacdDAO.proposals(1)
+          expect(proposal.stage).to.equal(3)
+        })
+
+        it('fails a proposal with majority down votes', async () => {
+          transaction = await jetpacks.connect(deployer).mint(1111, { value: ether(11.11) })
+          await transaction.wait()
+
+          transaction = await hoverboards.connect(deployer).mint(3334, { value: ether(40) })
+          await transaction.wait()
+
+          transaction = await jacdDAO.connect(deployer).createProposal(user.address, tokens(.1), 'Prop 1')
+          await transaction.wait()
+
+          transaction = await jacdDAO.connect(deployer).holdersVote(1, false)
+          await transaction.wait()
+
+          time.increase(604801)
+
+          transaction = await jacdDAO.connect(deployer).finalizeHoldersVote(1)
+          await transaction.wait()
+
+          let proposal = await jacdDAO.proposals(1)
+          expect(proposal.stage).to.equal(3)
+        })
+      })
+    })
+
+    describe('Failure', () => {
+      beforeEach(async () => {
+        transaction = await usdcToken.connect(user).approve(jacdDAO.target, AMOUNT)
+        await transaction.wait()
+
+        transaction = await jacdDAO.connect(user).receiveDeposit(AMOUNT)
+        await transaction.wait()
+
+        transaction = await jetpacks.connect(deployer).addToWhitelist(deployer.address)
+        await transaction.wait()
+
+        transaction = await hoverboards.connect(deployer).addToWhitelist(deployer.address)
+        await transaction.wait()
+
+        transaction = await jetpacks.connect(deployer).mint(1, { value: ether(.01) })
+        await transaction.wait()
+
+        transaction = await jacdDAO.connect(deployer).createProposal(user.address, tokens(.1), 'Prop 1')
+        await transaction.wait()
+      })
+      it('prevents finalization before end time is reached', async () => {
+        transaction = await jacdDAO.connect(deployer).holdersVote(1, true)
+        await transaction.wait()
+
+        await expect(jacdDAO.connect(deployer).finalizeHoldersVote(1)).to.be.reverted
+      })
+
+      it('rejects finalization of proposals not in holders stage', async () => {
+        transaction = await jetpacks.connect(deployer).mint(1110, { value: ether(11.11) })
+        await transaction.wait()
+
+        transaction = await hoverboards.connect(deployer).mint(3334, { value: ether(33.34) })
+        await transaction.wait()
+
+        transaction = await jacdDAO.connect(deployer).createProposal(user.address, tokens(.1), 'Prop 1')
+        await transaction.wait()
+
+        transaction = await jacdDAO.connect(deployer).holdersVote(1, true)
+        await transaction.wait()
+
+        time.increase(604801)
+
+        transaction = await jacdDAO.connect(deployer).finalizeHoldersVote(1)
+        await transaction.wait()
+
+        await expect(jacdDAO.connect(deployer).finalizeHoldersVote(1)).to.be.reverted
       })
     })
   })

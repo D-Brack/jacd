@@ -29,6 +29,8 @@ coverage.json
 typechain
 typechain-types
 
+NOTES.txt
+
 # Hardhat files
 cache
 artifacts

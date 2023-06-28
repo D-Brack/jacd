@@ -58,6 +58,13 @@ contract JACD {
         uint256 timestamp
     );
 
+    event VotePass(
+        uint256 proposal,
+        VoteStage stage,
+        uint256 votesFor,
+        uint256 votesAgainst
+    );
+
     modifier onlyHolders {
         require(jetpacks.balanceOf(msg.sender) > 0 ||
             hoverboards.balanceOf(msg.sender) > 0 ||
@@ -170,14 +177,34 @@ contract JACD {
         emit Vote(_index, msg.sender, _voteFor, votes, block.timestamp);
     }
 
-    function finalizeHoldersVote() public onlyHolders {
-        //vote end time must have passed
+    function finalizeHoldersVote(uint256 _index) public onlyHolders {
+        uint256 totalVotes = proposals[_index].votesFor + proposals[_index].votesAgainst;
+        uint256 maxVotes = 222197778;
 
-        //if > 50% total votes were submitted and votesFor > votesAgainst...
+        Proposal storage proposal = proposals[_index];
 
+        //require stage be holders
+        require(
+            block.timestamp > proposal.voteEnd ||
+            totalVotes == maxVotes,
+            'JACD: vote has not ended'
+        );
 
+        if (totalVotes >= (maxVotes / 2) && proposal.votesFor > proposal.votesAgainst) {
+            emit VotePass(
+                proposal.index,
+                proposal.stage,
+                proposal.votesFor,
+                proposal.votesAgainst
+            );
 
-        //else - votes fails
+            proposal.stage = VoteStage.All;
+            proposal.votesFor = 0;
+            proposal.votesAgainst = 0;
+            proposal.voteEnd = block.timestamp + 1209600;
+        } else {
+            proposal.stage = VoteStage.Failed;
+        }
     }
 
     // Finalize proposals & distribute funds

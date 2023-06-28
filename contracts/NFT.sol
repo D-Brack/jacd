@@ -12,7 +12,7 @@ contract NFT is ERC721Enumerable, Ownable {
     uint256 public cost;
     uint256 public maxSupply;
     uint256 public allowMintingOn;
-    uint8 public maxMint;
+    uint256 public maxMint;
     bool public isPaused = false;
     mapping(address => bool) public whitelist;
 
@@ -26,7 +26,7 @@ contract NFT is ERC721Enumerable, Ownable {
         uint256 _maxSupply,
         uint256 _allowMintingOn,
         string memory _baseURI,
-        uint8 _maxMint
+        uint256 _maxMint
     ) ERC721 (_name, _symbol) {
         cost = _cost;
         maxSupply = _maxSupply;
