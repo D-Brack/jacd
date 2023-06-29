@@ -19,6 +19,8 @@ contract JACD {
     mapping(uint256 => Proposal) public proposals;
 
     mapping(uint256 => mapping(address => bool)) public holderVoted;
+    mapping(uint256 => mapping(address => bool)) public holderAllVoted;
+    uint256 holdersWeight;
 
     enum VoteStage {Holder, All, Finalized, Failed}
 
@@ -51,6 +53,7 @@ contract JACD {
     event Vote(
         uint256 proposal,
         address voter,
+        VoteStage stage,
         bool voteFor,
         uint256 votes,
         uint256 timestamp
@@ -113,15 +116,14 @@ contract JACD {
     constructor(
         JACDToken _jacdToken,
         IERC20 _usdcToken,
-        IERC721Enumerable[] memory _collections
+        IERC721Enumerable[] memory _collections,
+        uint256 _holdersWeight
     )
     {
         jacdToken = _jacdToken;
         usdcToken = _usdcToken;
         collections = _collections;
-        // jetpacks = _jetpacks;
-        // hoverboards = _hoverboards;
-        // avas = _avas;
+        holdersWeight = _holdersWeight;
     }
 
     function getCollections() public view returns (IERC721Enumerable[] memory) {
@@ -194,9 +196,11 @@ contract JACD {
     }
 
     function holdersVote(uint256 _index, bool _voteFor) public onlyHolders {
-        require(proposals[_index].stage == VoteStage.Holder, 'JACD: not in holder voting stage');
-        require(holderVoted[_index][msg.sender] == false, 'JACD: holder already voted');
-        require(proposals[_index].voteEnd > block.timestamp, 'JACD: holder voting expired');
+        Proposal storage proposal = proposals[_index];
+
+        require(proposal.stage == VoteStage.Holder, 'JACD: not in "holder" voting stage');
+        require(!holderVoted[_index][msg.sender], 'JACD: holder already voted');
+        require(proposal.voteEnd > block.timestamp, 'JACD: holder voting expired');
 
         uint256 votes;
 
@@ -205,14 +209,14 @@ contract JACD {
         }
 
         if (_voteFor) {
-            proposals[_index].votesFor += votes;
+            proposal.votesFor += votes;
         } else {
-            proposals[_index].votesAgainst += votes;
+            proposal.votesAgainst += votes;
         }
 
         holderVoted[_index][msg.sender] = true;
 
-        emit Vote(_index, msg.sender, _voteFor, votes, block.timestamp);
+        emit Vote(_index, msg.sender, proposal.stage, _voteFor, votes, block.timestamp);
     }
 
     function finalizeHoldersVote(uint256 _index) public onlyHolders {
@@ -248,6 +252,41 @@ contract JACD {
         } else {
             proposal.stage = VoteStage.Failed;
         }
+    }
+
+    function allVote(uint256 _index, bool _voteFor, uint256 _tokenVotes) public holdersOrInvestors {
+        Proposal storage proposal = proposals[_index];
+
+        require(proposal.stage == VoteStage.All, 'JACD: not in "all" voting stage ');
+        require(
+            (!holderAllVoted[_index][msg.sender]) ||
+            jacdToken.balanceOf(msg.sender) > 0,
+            'JACD: no votes/already voted'
+        );
+        require(jacdToken.balanceOf(msg.sender) >= _tokenVotes, 'JACD: insufficient JACD token votes');
+        require(proposal.voteEnd > block.timestamp);
+
+        uint256 allVotes = _tokenVotes;
+
+        for(uint256 i; i < collections.length; i++) {
+            allVotes += collections[i].balanceOf(msg.sender) * (holdersWeight * 10e18);
+        }
+
+        if (_voteFor) {
+            proposal.votesFor += allVotes;
+        } else {
+            proposal.votesAgainst += allVotes;
+        }
+
+        if (allVotes > _tokenVotes) {
+            holderAllVoted[_index][msg.sender] = true;
+        }
+
+        if(_tokenVotes > 0) {
+            jacdToken.burnFrom(msg.sender, _tokenVotes);
+        }
+
+        emit Vote(_index, msg.sender, proposal.stage, _voteFor, allVotes, block.timestamp);
     }
 
     // Finalize proposals & distribute funds

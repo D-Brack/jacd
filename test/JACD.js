@@ -74,7 +74,7 @@ describe('JACD', () => {
     const collections = [jetpacks.target, hoverboards.target, avas.target]
 
     const JACDDAO = await ethers.getContractFactory('JACD')
-    jacdDAO = await JACDDAO.deploy(jacdToken.target, usdcToken.target, collections)
+    jacdDAO = await JACDDAO.deploy(jacdToken.target, usdcToken.target, collections, 100)
 
     transaction = await jacdToken.connect(deployer).transferOwnership(jacdDAO)
     await transaction.wait()
@@ -271,6 +271,7 @@ describe('JACD', () => {
         await expect(transaction).to.emit(jacdDAO, 'Vote').withArgs(
           1,
           holder.address,
+          0,
           false,
           1,
           (await ethers.provider.getBlock(await ethers.provider.getBlockNumber())).timestamp
@@ -453,6 +454,66 @@ describe('JACD', () => {
 
         await expect(jacdDAO.connect(holder).finalizeHoldersVote(1)).to.be.reverted
       })
+    })
+  })
+
+  describe('All Voting', () => {
+    beforeEach(async () => {
+      transaction = await jetpacks.connect(deployer).addToWhitelist(holder.address)
+      await transaction.wait()
+
+      transaction = await hoverboards.connect(deployer).addToWhitelist(deployer.address)
+      await transaction.wait()
+
+      transaction = await avas.connect(deployer).addToWhitelist(holder.address)
+      await transaction.wait()
+
+      transaction = await jetpacks.connect(holder).mint(1, { value: ether(.01) })
+      await transaction.wait()
+
+      transaction = await hoverboards.connect(deployer).mint(2, { value: ether(.02) })
+      await transaction.wait()
+
+      transaction = await avas.connect(holder).mint(3, { value: ether(.03) })
+      await transaction.wait()
+
+      transaction = await jacdDAO.connect(deployer).createProposal(rando.address, tokens(10), 'Prop 1')
+      await transaction.wait()
+
+      transaction = await jacdDAO.connect(holder).holdersVote(1, true)
+      await transaction.wait()
+
+      transaction = await jacdDAO.connect(deployer).holdersVote(1, false)
+      await transaction.wait()
+
+      transaction = await jacdDAO.connect(holder).finalizeHoldersVote(1)
+      await transaction.wait()
+
+      transaction = await usdcToken.connect(deployer).mint(investor.address, tokens(1))
+      await transaction.wait()
+
+      transaction = await usdcToken.connect(investor).approve(jacdDAO.target, tokens(1))
+      await transaction.wait()
+
+      transaction = await jacdDAO.connect(investor).receiveDeposit(tokens(1))
+      await transaction.wait()
+
+      transaction = await jacdToken.connect(investor).approve(jacdDAO.target, tokens(1))
+      await transaction.wait()
+    })
+
+    describe('Success', () => {
+      beforeEach(async () => {
+        transaction = await jacdDAO.connect(investor).allVote(1, true, tokens(1))
+        await transaction.wait()
+      })
+      it('emits a Vote event', async () => {
+        await expect(transaction).to.emit(jacdDAO, 'Vote')
+      })
+    })
+
+    describe('Failure', () => {
+
     })
   })
 })
