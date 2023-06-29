@@ -4,15 +4,13 @@ pragma solidity ^0.8.0;
 import 'hardhat/console.sol';
 import './JACDToken.sol';
 import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
-import '@openzeppelin/contracts/token/ERC721/IERC721.sol';
+import '@openzeppelin/contracts/token/ERC721/extensions/IERC721Enumerable.sol';
 
 contract JACD {
     JACDToken public jacdToken;
     IERC20 public usdcToken;
 
-    IERC721 public jetpacks;
-    IERC721 public hoverboards;
-    IERC721 public avas;
+    IERC721Enumerable[] public collections;
 
     uint256 public jacdSupply;
     uint256 public usdcBalance;
@@ -65,27 +63,73 @@ contract JACD {
         uint256 votesAgainst
     );
 
+    modifier holdersOrInvestors {
+        bool isHolderOrInvestor;
+
+        for(uint256 i; i < collections.length; i++) {
+            if(collections[i].balanceOf(msg.sender) > 0) {
+                isHolderOrInvestor = true;
+                break;
+            }
+
+            if (isHolderOrInvestor) {break;}
+        }
+
+        if((!isHolderOrInvestor) && jacdToken.balanceOf(msg.sender) > 0) {
+            isHolderOrInvestor = true;
+        }
+
+        require(isHolderOrInvestor, 'JACD: not a holder or an investor');
+
+        _;
+    }
+
     modifier onlyHolders {
-        require(jetpacks.balanceOf(msg.sender) > 0 ||
-            hoverboards.balanceOf(msg.sender) > 0 ||
-            avas.balanceOf(msg.sender) > 0,
-            'JACD: not a collection holder');
+        bool isHolder;
+
+        for(uint256 i; i < collections.length; i++) {
+            if(collections[i].balanceOf(msg.sender) > 0) {
+                isHolder = true;
+                break;
+            }
+
+            if (isHolder) {break;}
+        }
+
+        // require(jetpacks.balanceOf(msg.sender) > 0 ||
+        //     hoverboards.balanceOf(msg.sender) > 0 ||
+        //     avas.balanceOf(msg.sender) > 0,
+        //     'JACD: not a collection holder');
+
+        require(isHolder, 'JACD: not a holder');
+        _;
+    }
+
+    modifier onlyInvestors {
+        require(jacdToken.balanceOf(msg.sender) > 0, 'JACD: not an investor');
         _;
     }
 
     constructor(
         JACDToken _jacdToken,
         IERC20 _usdcToken,
-        IERC721 _jetpacks,
-        IERC721 _hoverboards,
-        IERC721 _avas
+        IERC721Enumerable[] memory _collections
     )
     {
         jacdToken = _jacdToken;
         usdcToken = _usdcToken;
-        jetpacks = _jetpacks;
-        hoverboards = _hoverboards;
-        avas = _avas;
+        collections = _collections;
+        // jetpacks = _jetpacks;
+        // hoverboards = _hoverboards;
+        // avas = _avas;
+    }
+
+    function getCollections() public view returns (IERC721Enumerable[] memory) {
+        return collections;
+    }
+
+    function collectionsLength() public view returns (uint256) {
+        return collections.length;
     }
 
     receive() external payable {}
@@ -119,7 +163,7 @@ contract JACD {
         string memory _description
     )
         public
-        onlyHolders
+        holdersOrInvestors
     {
         require(_amount > 0, 'JACD: proposal amount of 0');
         require(_amount <= usdcBalance / 10, 'JACD: proposal exceeds 10% limit');
@@ -156,14 +200,8 @@ contract JACD {
 
         uint256 votes;
 
-        if (jetpacks.balanceOf(msg.sender) > 0) {
-            votes += jetpacks.balanceOf(msg.sender) * 66666;
-        }
-        if (hoverboards.balanceOf(msg.sender) > 0) {
-            votes += hoverboards.balanceOf(msg.sender) * 11111;
-        }
-        if (avas.balanceOf(msg.sender) > 0) {
-            votes += avas.balanceOf(msg.sender) * 6666;
+        for(uint256 i; i < collections.length; i++) {
+            votes += collections[i].balanceOf(msg.sender);
         }
 
         if (_voteFor) {
@@ -178,19 +216,24 @@ contract JACD {
     }
 
     function finalizeHoldersVote(uint256 _index) public onlyHolders {
-        uint256 totalVotes = proposals[_index].votesFor + proposals[_index].votesAgainst;
-        uint256 maxVotes = 222197778;
-
         Proposal storage proposal = proposals[_index];
 
-        //require stage be holders
+        require(proposal.stage == VoteStage.Holder);
+
+        uint256 votesSubmitted = proposal.votesFor + proposal.votesAgainst;
+
+        uint256 maxVotes;
+        for(uint256 i; i < collections.length; i++) {
+            maxVotes += collections[i].totalSupply();
+        }
+
         require(
             block.timestamp > proposal.voteEnd ||
-            totalVotes == maxVotes,
+            votesSubmitted == maxVotes,
             'JACD: vote has not ended'
         );
 
-        if (totalVotes >= (maxVotes / 2) && proposal.votesFor > proposal.votesAgainst) {
+        if (votesSubmitted >= (maxVotes / 2) && proposal.votesFor > proposal.votesAgainst) {
             emit VotePass(
                 proposal.index,
                 proposal.stage,
