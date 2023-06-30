@@ -99,11 +99,6 @@ contract JACD {
             if (isHolder) {break;}
         }
 
-        // require(jetpacks.balanceOf(msg.sender) > 0 ||
-        //     hoverboards.balanceOf(msg.sender) > 0 ||
-        //     avas.balanceOf(msg.sender) > 0,
-        //     'JACD: not a collection holder');
-
         require(isHolder, 'JACD: not a holder');
         _;
     }
@@ -222,7 +217,7 @@ contract JACD {
     function finalizeHoldersVote(uint256 _index) public onlyHolders {
         Proposal storage proposal = proposals[_index];
 
-        require(proposal.stage == VoteStage.Holder);
+        require(proposal.stage == VoteStage.Holder, 'JACD: not in "holder" voting stage');
 
         uint256 votesSubmitted = proposal.votesFor + proposal.votesAgainst;
 

@@ -132,7 +132,8 @@ describe('JACD', () => {
         transaction = await usdcToken.connect(investor).approve(jacdDAO.target, AMOUNT)
         await transaction.wait()
 
-        await expect(jacdDAO.connect(investor).receiveDeposit(0)).to.be.reverted
+        await expect(jacdDAO.connect(investor).receiveDeposit(0))
+          .to.be.revertedWith('JACD: deposit amount of 0')
       })
     })
   })
@@ -193,7 +194,8 @@ describe('JACD', () => {
           deployer.address,
           tokens(10),
           'Prop 1'
-        )).to.be.reverted
+        ))
+          .to.be.revertedWith('JACD: not a holder or an investor')
       })
 
       it('rejects proposals with amounts of 0', async () => {
@@ -201,7 +203,8 @@ describe('JACD', () => {
           holder.address,
           0,
           'Prop 1'
-        )).to.be.reverted
+        ))
+          .to.be.revertedWith('JACD: proposal amount of 0')
       })
 
       it('rejects proposals with amounts of over 10% of USDC balance', async () => {
@@ -209,7 +212,8 @@ describe('JACD', () => {
           holder.address,
           tokens(10.01),
           'Prop 1'
-        )).to.be.reverted
+        ))
+          .to.be.revertedWith('JACD: proposal exceeds 10% limit')
       })
 
       it('rejects proposals with no descritpion', async () => {
@@ -217,7 +221,8 @@ describe('JACD', () => {
           holder.address,
           tokens(10),
           ''
-        )).to.be.reverted
+        ))
+          .to.be.revertedWith('JACD: no proposal description')
       })
 
       it('rejects proposals with invalid recipient address', async () => {
@@ -225,7 +230,8 @@ describe('JACD', () => {
           '0x0000000000000000000000000000000000000000',
           tokens(10),
           'Prop 1'
-        )).to.be.reverted
+        ))
+          .to.be.revertedWith('JACD: invalid proposal recipient address')
       })
     })
   })
@@ -281,7 +287,8 @@ describe('JACD', () => {
 
     describe('Failure', () => {
       it('rejects votes from non-holders', async () => {
-        await expect(jacdDAO.connect(rando).holdersVote(1, false)).to.be.reverted
+        await expect(jacdDAO.connect(rando).holdersVote(1, false))
+          .to.be.revertedWith('JACD: not a holder')
       })
 
       it('rejects proposals not in holder stage', async () => {
@@ -294,20 +301,23 @@ describe('JACD', () => {
         transaction = await jacdDAO.connect(deployer).finalizeHoldersVote(1)
         await transaction.wait()
 
-        await expect(jacdDAO.connect(deployer).finalizeHoldersVote(1)).to.be.reverted
+        await expect(jacdDAO.connect(holder).holdersVote(1, true))
+          .to.be.revertedWith('JACD: not in "holder" voting stage')
       })
 
       it('rejects holders voting twice', async () => {
         transaction = await jacdDAO.connect(holder).holdersVote(1, true)
         await transaction.wait()
 
-        await expect(jacdDAO.connect(holder).holdersVote(1, true)).to.be.reverted
+        await expect(jacdDAO.connect(holder).holdersVote(1, true))
+        .to.be.revertedWith('JACD: holder already voted')
       })
 
       it('rejects voting after end time', async () => {
         await time.increase(604801)
 
-        await expect(jacdDAO.connect(holder).holdersVote(1, true)).to.be.reverted
+        await expect(jacdDAO.connect(holder).holdersVote(1, true))
+          .to.be.revertedWith('JACD: holder voting expired')
       })
     })
   })
@@ -436,7 +446,8 @@ describe('JACD', () => {
         transaction = await jacdDAO.connect(holder).holdersVote(1, true)
         await transaction.wait()
 
-        await expect(jacdDAO.connect(holder).finalizeHoldersVote(1)).to.be.reverted
+        await expect(jacdDAO.connect(holder).finalizeHoldersVote(1))
+          .to.be.revertedWith('JACD: vote has not ended')
       })
 
       it('rejects finalization of proposals not in holders stage', async () => {
@@ -452,7 +463,8 @@ describe('JACD', () => {
         transaction = await jacdDAO.connect(holder).finalizeHoldersVote(1)
         await transaction.wait()
 
-        await expect(jacdDAO.connect(holder).finalizeHoldersVote(1)).to.be.reverted
+        await expect(jacdDAO.connect(holder).finalizeHoldersVote(1))
+          .to.be.revertedWith('JACD: not in "holder" voting stage')
       })
     })
   })
