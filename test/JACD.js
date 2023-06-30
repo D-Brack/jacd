@@ -516,16 +516,72 @@ describe('JACD', () => {
 
     describe('Success', () => {
       beforeEach(async () => {
+        transaction = await jacdDAO.connect(holder).allVote(1, true, 0)
+        await transaction.wait()
+
+        transaction = await jacdDAO.connect(deployer).allVote(1, false, 0)
+        await transaction.wait()
+
         transaction = await jacdDAO.connect(investor).allVote(1, true, tokens(1))
         await transaction.wait()
       })
+
+      it('records the votes', async () => {
+        let proposal = await jacdDAO.proposals(1)
+
+        expect(proposal.votesFor).to.equal(tokens(401))
+        expect(proposal.votesAgainst).to.equal(tokens(200))
+      })
+
+      it('updates a holders voting status', async () => {
+        expect(await jacdDAO.holderAllVoted(1, holder.address)).to.equal(true)
+      })
+
+      it('burns JACD tokens for votes', async () => {
+        expect(await jacdToken.totalSupply()).to.equal(AMOUNT)
+        expect(await jacdToken.balanceOf(investor.address)).to.equal(AMOUNT)
+      })
+
       it('emits a Vote event', async () => {
-        await expect(transaction).to.emit(jacdDAO, 'Vote')
+        await expect(transaction).to.emit(jacdDAO, 'Vote').withArgs(
+          1,
+          investor.address,
+          1,
+          true,
+          tokens(1),
+          (await ethers.provider.getBlock(await ethers.provider.getBlockNumber())).timestamp
+        )
       })
     })
 
     describe('Failure', () => {
+      it('rejects votes from non-holders/non-investors', async () => {
+        await expect(jacdDAO.connect(rando).allVote(1, true, 0))
+          .to.be.rejectedWith('JACD: not a holder or an investor')
+      })
 
+      it('prevents holders voting twice/votes with 0 JACD tokens', async () => {
+        transaction = await jacdDAO.connect(holder).allVote(1, true, 0)
+        await transaction.wait()
+
+        await expect(jacdDAO.connect(holder).allVote(1, true, tokens(1)))
+          .to.be.rejectedWith('JACD: no votes/already voted')
+      })
+
+      it('rejects voting more than amount of JACD token balance', async () => {
+        transaction = await jacdToken.connect(investor).approve(jacdDAO.target, tokens(1000))
+        await transaction.wait()
+
+        await expect(jacdDAO.connect(investor).allVote(1, true, tokens(101.01)))
+          .to.be.revertedWith('JACD: insufficient JACD token votes')
+      })
+
+      it('rejects voting after time expired', async () => {
+        time.increase(1209601)
+
+        await expect(jacdDAO.connect(holder).allVote(1, true, 0))
+          .to.be.revertedWith('JACD: voting time expired')
+      })
     })
   })
 })

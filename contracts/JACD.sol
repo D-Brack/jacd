@@ -259,12 +259,12 @@ contract JACD {
             'JACD: no votes/already voted'
         );
         require(jacdToken.balanceOf(msg.sender) >= _tokenVotes, 'JACD: insufficient JACD token votes');
-        require(proposal.voteEnd > block.timestamp);
+        require(block.timestamp < proposal.voteEnd, 'JACD: voting time expired');
 
         uint256 allVotes = _tokenVotes;
 
         for(uint256 i; i < collections.length; i++) {
-            allVotes += collections[i].balanceOf(msg.sender) * (holdersWeight * 10e18);
+            allVotes += collections[i].balanceOf(msg.sender) * (holdersWeight * 1e18);
         }
 
         if (_voteFor) {
@@ -284,6 +284,12 @@ contract JACD {
         emit Vote(_index, msg.sender, proposal.stage, _voteFor, allVotes, block.timestamp);
     }
 
-    // Finalize proposals & distribute funds
+    function finalizeProposal(uint256 _index) public {
+        //require time to have expired or ?
+
+        //send funds
+        //update proposal stage
+        //emit finalized event
+    }
 
 }
