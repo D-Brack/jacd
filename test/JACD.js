@@ -18,7 +18,7 @@ describe('JACD', () => {
     collections,
     deployer,
     holder,
-    investor,
+    contributor,
     rando
   let transaction, result
 
@@ -26,7 +26,7 @@ describe('JACD', () => {
     const accounts = await ethers.getSigners()
     deployer = accounts[0]
     holder = accounts[1]
-    investor = accounts[2]
+    contributor = accounts[2]
     rando = accounts[3]
 
     const JACDToken = await ethers.getContractFactory('JACDToken')
@@ -35,7 +35,7 @@ describe('JACD', () => {
     const USDCToken = await ethers.getContractFactory('JACDToken')
     usdcToken = await USDCToken.deploy('USD Coin', 'USDC')
 
-    transaction = await usdcToken.connect(deployer).mint(investor.address, AMOUNT)
+    transaction = await usdcToken.connect(deployer).mint(contributor.address, AMOUNT)
     await transaction.wait()
 
     const Jetpacks = await ethers.getContractFactory('NFT')
@@ -79,10 +79,10 @@ describe('JACD', () => {
     transaction = await jacdToken.connect(deployer).transferOwnership(jacdDAO)
     await transaction.wait()
 
-    transaction = await usdcToken.connect(investor).approve(jacdDAO.target, AMOUNT)
+    transaction = await usdcToken.connect(contributor).approve(jacdDAO.target, AMOUNT)
     await transaction.wait()
 
-    transaction = await jacdDAO.connect(investor).receiveDeposit(AMOUNT)
+    transaction = await jacdDAO.connect(contributor).receiveDeposit(AMOUNT)
     await transaction.wait()
   })
 
@@ -105,19 +105,19 @@ describe('JACD', () => {
   describe('Receiving Deposits', () => {
     describe('Success', () => {
       it('accepts token deposits', async () => {
-        expect(await usdcToken.balanceOf(investor.address)).to.equal(0)
+        expect(await usdcToken.balanceOf(contributor.address)).to.equal(0)
         expect(await usdcToken.balanceOf(jacdDAO.target)).to.equal(AMOUNT)
         expect(await jacdDAO.usdcBalance()).to.equal(AMOUNT)
       })
 
       it('distributes JACD tokens', async () => {
-        expect(await jacdToken.balanceOf(investor.address)).to.equal(AMOUNT)
+        expect(await jacdToken.balanceOf(contributor.address)).to.equal(AMOUNT)
         expect(await jacdDAO.jacdSupply()).to.equal(AMOUNT)
       })
 
       it('emits a Deposit event', async () => {
         await expect(transaction).to.emit(jacdDAO, 'Deposit').withArgs(
-          investor.address,
+          contributor.address,
           AMOUNT,
           (await ethers.provider.getBlock(await ethers.provider.getBlockNumber())).timestamp
         )
@@ -126,13 +126,13 @@ describe('JACD', () => {
 
     describe('Failure', () => {
       it('rejects deposits of 0', async () => {
-        transaction = await usdcToken.connect(deployer).mint(investor.address, AMOUNT)
+        transaction = await usdcToken.connect(deployer).mint(contributor.address, AMOUNT)
         await transaction.wait()
 
-        transaction = await usdcToken.connect(investor).approve(jacdDAO.target, AMOUNT)
+        transaction = await usdcToken.connect(contributor).approve(jacdDAO.target, AMOUNT)
         await transaction.wait()
 
-        await expect(jacdDAO.connect(investor).receiveDeposit(0))
+        await expect(jacdDAO.connect(contributor).receiveDeposit(0))
           .to.be.revertedWith('JACD: deposit amount of 0')
       })
     })
@@ -189,13 +189,13 @@ describe('JACD', () => {
         await transaction.wait()
       })
 
-      it('rejects proposals from non-holders/non-investors', async () => {
+      it('rejects proposals from non-holders/non-contributors', async () => {
         await expect(jacdDAO.connect(rando).createProposal(
           deployer.address,
           tokens(10),
           'Prop 1'
         ))
-          .to.be.revertedWith('JACD: not a holder or an investor')
+          .to.be.revertedWith('JACD: not a holder or an contributor')
       })
 
       it('rejects proposals with amounts of 0', async () => {
@@ -501,16 +501,16 @@ describe('JACD', () => {
       transaction = await jacdDAO.connect(holder).finalizeHoldersVote(1)
       await transaction.wait()
 
-      transaction = await usdcToken.connect(deployer).mint(investor.address, tokens(1))
+      transaction = await usdcToken.connect(deployer).mint(contributor.address, tokens(1))
       await transaction.wait()
 
-      transaction = await usdcToken.connect(investor).approve(jacdDAO.target, tokens(1))
+      transaction = await usdcToken.connect(contributor).approve(jacdDAO.target, tokens(1))
       await transaction.wait()
 
-      transaction = await jacdDAO.connect(investor).receiveDeposit(tokens(1))
+      transaction = await jacdDAO.connect(contributor).receiveDeposit(tokens(1))
       await transaction.wait()
 
-      transaction = await jacdToken.connect(investor).approve(jacdDAO.target, tokens(1))
+      transaction = await jacdToken.connect(contributor).approve(jacdDAO.target, tokens(1))
       await transaction.wait()
     })
 
@@ -522,7 +522,7 @@ describe('JACD', () => {
         transaction = await jacdDAO.connect(deployer).allVote(1, false, 0)
         await transaction.wait()
 
-        transaction = await jacdDAO.connect(investor).allVote(1, true, tokens(1))
+        transaction = await jacdDAO.connect(contributor).allVote(1, true, tokens(1))
         await transaction.wait()
       })
 
@@ -539,13 +539,13 @@ describe('JACD', () => {
 
       it('burns JACD tokens for votes', async () => {
         expect(await jacdToken.totalSupply()).to.equal(AMOUNT)
-        expect(await jacdToken.balanceOf(investor.address)).to.equal(AMOUNT)
+        expect(await jacdToken.balanceOf(contributor.address)).to.equal(AMOUNT)
       })
 
       it('emits a Vote event', async () => {
         await expect(transaction).to.emit(jacdDAO, 'Vote').withArgs(
           1,
-          investor.address,
+          contributor.address,
           1,
           true,
           tokens(1),
@@ -555,9 +555,9 @@ describe('JACD', () => {
     })
 
     describe('Failure', () => {
-      it('rejects votes from non-holders/non-investors', async () => {
+      it('rejects votes from non-holders/non-contributors', async () => {
         await expect(jacdDAO.connect(rando).allVote(1, true, 0))
-          .to.be.rejectedWith('JACD: not a holder or an investor')
+          .to.be.rejectedWith('JACD: not a holder or an contributor')
       })
 
       it('prevents holders voting twice/votes with 0 JACD tokens', async () => {
@@ -569,10 +569,10 @@ describe('JACD', () => {
       })
 
       it('rejects voting more than amount of JACD token balance', async () => {
-        transaction = await jacdToken.connect(investor).approve(jacdDAO.target, tokens(1000))
+        transaction = await jacdToken.connect(contributor).approve(jacdDAO.target, tokens(1000))
         await transaction.wait()
 
-        await expect(jacdDAO.connect(investor).allVote(1, true, tokens(101.01)))
+        await expect(jacdDAO.connect(contributor).allVote(1, true, tokens(101.01)))
           .to.be.revertedWith('JACD: insufficient JACD token votes')
       })
 

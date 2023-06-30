@@ -66,23 +66,23 @@ contract JACD {
         uint256 votesAgainst
     );
 
-    modifier holdersOrInvestors {
-        bool isHolderOrInvestor;
+    modifier holdersOrContributors {
+        bool isHolderOrContributor;
 
         for(uint256 i; i < collections.length; i++) {
             if(collections[i].balanceOf(msg.sender) > 0) {
-                isHolderOrInvestor = true;
+                isHolderOrContributor = true;
                 break;
             }
 
-            if (isHolderOrInvestor) {break;}
+            if (isHolderOrContributor) {break;}
         }
 
-        if((!isHolderOrInvestor) && jacdToken.balanceOf(msg.sender) > 0) {
-            isHolderOrInvestor = true;
+        if((!isHolderOrContributor) && jacdToken.balanceOf(msg.sender) > 0) {
+            isHolderOrContributor = true;
         }
 
-        require(isHolderOrInvestor, 'JACD: not a holder or an investor');
+        require(isHolderOrContributor, 'JACD: not a holder or an contributor');
 
         _;
     }
@@ -103,8 +103,8 @@ contract JACD {
         _;
     }
 
-    modifier onlyInvestors {
-        require(jacdToken.balanceOf(msg.sender) > 0, 'JACD: not an investor');
+    modifier onlyContributors {
+        require(jacdToken.balanceOf(msg.sender) > 0, 'JACD: not an contributor');
         _;
     }
 
@@ -160,7 +160,7 @@ contract JACD {
         string memory _description
     )
         public
-        holdersOrInvestors
+        holdersOrContributors
     {
         require(_amount > 0, 'JACD: proposal amount of 0');
         require(_amount <= usdcBalance / 10, 'JACD: proposal exceeds 10% limit');
@@ -249,7 +249,7 @@ contract JACD {
         }
     }
 
-    function allVote(uint256 _index, bool _voteFor, uint256 _tokenVotes) public holdersOrInvestors {
+    function allVote(uint256 _index, bool _voteFor, uint256 _tokenVotes) public holdersOrContributors {
         Proposal storage proposal = proposals[_index];
 
         require(proposal.stage == VoteStage.All, 'JACD: not in "all" voting stage ');
