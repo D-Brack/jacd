@@ -10,6 +10,10 @@ contract JACD {
     JACDToken public jacdToken;
     IERC20 public usdcToken;
 
+    uint256 holdersWeight;
+    uint256 holderVotes;
+    uint256 public testDiv;
+
     IERC721Enumerable[] public collections;
 
     uint256 public jacdSupply;
@@ -20,7 +24,6 @@ contract JACD {
 
     mapping(uint256 => mapping(address => bool)) public holderVoted;
     mapping(uint256 => mapping(address => bool)) public holderAllVoted;
-    uint256 holdersWeight;
 
     enum VoteStage {Holder, All, Finalized, Failed}
 
@@ -112,12 +115,14 @@ contract JACD {
         JACDToken _jacdToken,
         IERC20 _usdcToken,
         IERC721Enumerable[] memory _collections,
+        uint256 _holderVotes,
         uint256 _holdersWeight
     )
     {
         jacdToken = _jacdToken;
         usdcToken = _usdcToken;
         collections = _collections;
+        holderVotes = _holderVotes;
         holdersWeight = _holdersWeight;
     }
 
@@ -221,18 +226,16 @@ contract JACD {
 
         uint256 votesSubmitted = proposal.votesFor + proposal.votesAgainst;
 
-        uint256 maxVotes;
-        for(uint256 i; i < collections.length; i++) {
-            maxVotes += collections[i].totalSupply();
-        }
-
         require(
             block.timestamp > proposal.voteEnd ||
-            votesSubmitted == maxVotes,
+            votesSubmitted == holderVotes,
             'JACD: vote has not ended'
         );
 
-        if (votesSubmitted >= (maxVotes / 2) && proposal.votesFor > proposal.votesAgainst) {
+        if (
+            votesSubmitted >= (holderVotes / 2) &&
+            proposal.votesFor > proposal.votesAgainst
+        ) {
             emit VotePass(
                 proposal.index,
                 proposal.stage,
@@ -284,12 +287,33 @@ contract JACD {
         emit Vote(_index, msg.sender, proposal.stage, _voteFor, allVotes, block.timestamp);
     }
 
-    function finalizeProposal(uint256 _index) public {
-        //require time to have expired or ?
+    function finalizeProposal(uint256 _index) public onlyHolders {
+        Proposal storage proposal = proposals[_index];
 
-        //send funds
-        //update proposal stage
-        //emit finalized event
+        require(block.timestamp > proposal.voteEnd, 'JACD: vote has not ended');
+        require(
+            usdcToken.balanceOf(address(this)) > proposal.amount,
+            'JACD: insufficient USDC balance'
+        );
+
+        if(
+            proposal.votesFor > proposal.votesAgainst &&
+            proposal.votesFor + proposal.votesAgainst >= holderVotes * holdersWeight * 1e18
+        ) {
+            require(usdcToken.transfer(proposal.recipient, proposal.amount));
+            usdcBalance -= proposal.amount;
+
+            emit VotePass(
+                proposal.index,
+                proposal.stage,
+                proposal.votesFor,
+                proposal.votesAgainst
+            );
+
+            proposal.stage = VoteStage.Finalized;
+        } else {
+            proposal.stage = VoteStage.Failed;
+        }
+
     }
-
 }

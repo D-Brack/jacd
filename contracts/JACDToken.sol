@@ -14,5 +14,4 @@ contract JACDToken is ERC20Burnable, Ownable {
 
         return true;
     }
-
 }
