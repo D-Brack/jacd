@@ -73,7 +73,7 @@ describe('JACD', () => {
     const collections = [jetpacks.target, hoverboards.target, avas.target]
 
     const JACDDAO = await ethers.getContractFactory('JACD')
-    jacdDAO = await JACDDAO.deploy(jacdToken.target, usdcToken.target, collections, 6, 100)
+    jacdDAO = await JACDDAO.deploy(jacdToken.target, usdcToken.target, collections, 6, 100, 3, tokens(600))
 
     transaction = await jacdToken.connect(deployer).transferOwnership(jacdDAO)
     await transaction.wait()
@@ -685,8 +685,11 @@ describe('JACD', () => {
           transaction = await jacdDAO.connect(holder).allVote(1, true, 0)
           await transaction.wait()
 
-          transaction = await jacdDAO.connect(contributor).allVote(1, true, tokens(1))
-          await transaction.wait()
+          // transaction = await jacdDAO.connect(deployer).allVote(1, false, 0)
+          // await transaction.wait()
+
+          // transaction = await jacdDAO.connect(contributor).allVote(1, true, tokens(1))
+          // await transaction.wait()
 
           time.increase(1209601)
 
@@ -736,6 +739,7 @@ describe('JACD', () => {
         await expect(jacdDAO.connect(holder).finalizeProposal(1))
           .to.be.revertedWith('JACD: vote has not ended')
       })
+
       it('prevents finalization for insufficient USDC balance', async () => {
         for(i = 2; i < 12; i++) {
           transaction = await jacdDAO.connect(deployer).createProposal(rando.address, tokens(10), 'Prop 1')

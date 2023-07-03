@@ -10,9 +10,10 @@ contract JACD {
     JACDToken public jacdToken;
     IERC20 public usdcToken;
 
-    uint256 holdersWeight;
-    uint256 holderVotes;
-    uint256 public testDiv;
+    uint256 public holdersWeight;
+    uint256 public holderVotes;
+    uint256 public minHolderVotesToPass;
+    uint256 public minVotesToFinalize;
 
     IERC721Enumerable[] public collections;
 
@@ -116,7 +117,9 @@ contract JACD {
         IERC20 _usdcToken,
         IERC721Enumerable[] memory _collections,
         uint256 _holderVotes,
-        uint256 _holdersWeight
+        uint256 _holdersWeight,
+        uint256 _minHolderVotesToPass,
+        uint256 _minVotesToFinalize
     )
     {
         jacdToken = _jacdToken;
@@ -124,6 +127,8 @@ contract JACD {
         collections = _collections;
         holderVotes = _holderVotes;
         holdersWeight = _holdersWeight;
+        minHolderVotesToPass = _minHolderVotesToPass;
+        minVotesToFinalize = _minVotesToFinalize;
     }
 
     function getCollections() public view returns (IERC721Enumerable[] memory) {
@@ -233,7 +238,7 @@ contract JACD {
         );
 
         if (
-            votesSubmitted >= (holderVotes / 2) &&
+            votesSubmitted >= minHolderVotesToPass &&
             proposal.votesFor > proposal.votesAgainst
         ) {
             emit VotePass(
@@ -298,7 +303,7 @@ contract JACD {
 
         if(
             proposal.votesFor > proposal.votesAgainst &&
-            proposal.votesFor + proposal.votesAgainst >= holderVotes * holdersWeight * 1e18
+            proposal.votesFor + proposal.votesAgainst >= minVotesToFinalize
         ) {
             require(usdcToken.transfer(proposal.recipient, proposal.amount));
             usdcBalance -= proposal.amount;
