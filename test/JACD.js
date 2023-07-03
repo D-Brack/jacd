@@ -685,12 +685,6 @@ describe('JACD', () => {
           transaction = await jacdDAO.connect(holder).allVote(1, true, 0)
           await transaction.wait()
 
-          // transaction = await jacdDAO.connect(deployer).allVote(1, false, 0)
-          // await transaction.wait()
-
-          // transaction = await jacdDAO.connect(contributor).allVote(1, true, tokens(1))
-          // await transaction.wait()
-
           time.increase(1209601)
 
           transaction = await jacdDAO.connect(holder).finalizeProposal(1)
