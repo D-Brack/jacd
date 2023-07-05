@@ -1,9 +1,9 @@
 const { expect } = require('chai')
 const { ethers } = require('hardhat')
-const { time } = require('@nomicfoundation/hardhat-toolbox/network-helpers')
+const { time } = require('@nomicfoundation/hardhat-network-helpers')
 
 const tokens = (amount) => {
-  return ethers.parseUnits(amount.toString(), 'ether')
+  return ethers.utils.parseUnits(amount.toString(), 'ether')
 }
 
 const ether = tokens
@@ -70,15 +70,15 @@ describe('JACD', () => {
       3
     )
 
-    const collections = [jetpacks.target, hoverboards.target, avas.target]
+    const collections = [jetpacks.address, hoverboards.address, avas.address]
 
     const JACDDAO = await ethers.getContractFactory('JACD')
-    jacdDAO = await JACDDAO.deploy(jacdToken.target, usdcToken.target, collections, 6, 100, 3, tokens(600))
+    jacdDAO = await JACDDAO.deploy(jacdToken.address, usdcToken.address, collections, 6, 100, 3, tokens(600))
 
-    transaction = await jacdToken.connect(deployer).transferOwnership(jacdDAO)
+    transaction = await jacdToken.connect(deployer).transferOwnership(jacdDAO.address)
     await transaction.wait()
 
-    transaction = await usdcToken.connect(contributor).approve(jacdDAO.target, AMOUNT)
+    transaction = await usdcToken.connect(contributor).approve(jacdDAO.address, AMOUNT)
     await transaction.wait()
 
     transaction = await jacdDAO.connect(contributor).receiveDeposit(AMOUNT)
@@ -87,17 +87,17 @@ describe('JACD', () => {
 
   describe('Deployment', () => {
     it('initializes token contracts', async () => {
-      expect(await jacdDAO.jacdToken()).to.equal(jacdToken.target)
-      expect(await jacdDAO.usdcToken()).to.equal(usdcToken.target)
+      expect(await jacdDAO.jacdToken()).to.equal(jacdToken.address)
+      expect(await jacdDAO.usdcToken()).to.equal(usdcToken.address)
     })
 
     it('initializes NFT collection contracts', async () => {
       let collections = await jacdDAO.getCollections()
 
       expect(await jacdDAO.collectionsLength()).to.equal(3)
-      expect(collections[0]).to.equal(jetpacks.target)
-      expect(collections[1]).to.equal(hoverboards.target)
-      expect(collections[2]).to.equal(avas.target)
+      expect(collections[0]).to.equal(jetpacks.address)
+      expect(collections[1]).to.equal(hoverboards.address)
+      expect(collections[2]).to.equal(avas.address)
     })
   })
 
@@ -105,7 +105,7 @@ describe('JACD', () => {
     describe('Success', () => {
       it('accepts token deposits', async () => {
         expect(await usdcToken.balanceOf(contributor.address)).to.equal(0)
-        expect(await usdcToken.balanceOf(jacdDAO.target)).to.equal(AMOUNT)
+        expect(await usdcToken.balanceOf(jacdDAO.address)).to.equal(AMOUNT)
         expect(await jacdDAO.usdcBalance()).to.equal(AMOUNT)
       })
 
@@ -128,7 +128,7 @@ describe('JACD', () => {
         transaction = await usdcToken.connect(deployer).mint(contributor.address, AMOUNT)
         await transaction.wait()
 
-        transaction = await usdcToken.connect(contributor).approve(jacdDAO.target, AMOUNT)
+        transaction = await usdcToken.connect(contributor).approve(jacdDAO.address, AMOUNT)
         await transaction.wait()
 
         await expect(jacdDAO.connect(contributor).receiveDeposit(0))
@@ -509,13 +509,13 @@ describe('JACD', () => {
       transaction = await usdcToken.connect(deployer).mint(contributor.address, tokens(1))
       await transaction.wait()
 
-      transaction = await usdcToken.connect(contributor).approve(jacdDAO.target, tokens(1))
+      transaction = await usdcToken.connect(contributor).approve(jacdDAO.address, tokens(1))
       await transaction.wait()
 
       transaction = await jacdDAO.connect(contributor).receiveDeposit(tokens(1))
       await transaction.wait()
 
-      transaction = await jacdToken.connect(contributor).approve(jacdDAO.target, tokens(1))
+      transaction = await jacdToken.connect(contributor).approve(jacdDAO.address, tokens(1))
       await transaction.wait()
     })
 
@@ -574,7 +574,7 @@ describe('JACD', () => {
       })
 
       it('rejects voting more than amount of JACD token balance', async () => {
-        transaction = await jacdToken.connect(contributor).approve(jacdDAO.target, tokens(1000))
+        transaction = await jacdToken.connect(contributor).approve(jacdDAO.address, tokens(1000))
         await transaction.wait()
 
         await expect(jacdDAO.connect(contributor).allVote(1, true, tokens(101.01)))
@@ -625,13 +625,13 @@ describe('JACD', () => {
       transaction = await usdcToken.connect(deployer).mint(contributor.address, tokens(1))
       await transaction.wait()
 
-      transaction = await usdcToken.connect(contributor).approve(jacdDAO.target, tokens(1))
+      transaction = await usdcToken.connect(contributor).approve(jacdDAO.address, tokens(1))
       await transaction.wait()
 
       transaction = await jacdDAO.connect(contributor).receiveDeposit(tokens(1))
       await transaction.wait()
 
-      transaction = await jacdToken.connect(contributor).approve(jacdDAO.target, tokens(1))
+      transaction = await jacdToken.connect(contributor).approve(jacdDAO.address, tokens(1))
       await transaction.wait()
     })
 
@@ -655,7 +655,7 @@ describe('JACD', () => {
 
         it('transfers USDC tokens', async () => {
           expect(await usdcToken.balanceOf(rando.address)).to.equal(tokens(10))
-          expect(await usdcToken.balanceOf(jacdDAO.target)).to.equal(tokens(91))
+          expect(await usdcToken.balanceOf(jacdDAO.address)).to.equal(tokens(91))
         })
 
         it('updates usdc balance', async () => {

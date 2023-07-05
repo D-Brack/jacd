@@ -2,11 +2,11 @@ const { expect } = require('chai');
 const { ethers } = require('hardhat');
 
 const tokens = (n) => {
-  return ethers.parseUnits(n.toString(), 'ether')
+  return ethers.utils.parseUnits(n.toString(), 'ether')
 }
 
 describe('JACD Token', () => {
-  const NAME = 'Jadu Avas Charities DAO'
+  const NAME = 'JACD Coin'
   const SYMBOL = 'JACD'
   const AMOUNT = tokens(1)
 

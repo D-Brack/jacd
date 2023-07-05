@@ -7,7 +7,7 @@
 const hre = require("hardhat")
 
 const tokens = (amount) => {
-  return ethers.parseUnits(amount.toString(), 'ether')
+  return ethers.utils.parseUnits(amount.toString(), 'ether')
 }
 
 const ether = tokens
@@ -16,12 +16,12 @@ async function main() {
   const JACDToken = await hre.ethers.getContractFactory('JACDToken')
   const jacdToken = await JACDToken.deploy('JACD Coin', 'JACD')
 
-  console.log(`JACD Coin deployed to ${jacdToken.target}`)
+  console.log(`JACD Coin deployed to ${jacdToken.address}`)
 
   const USDCToken = await hre.ethers.getContractFactory('JACDToken')
   const usdcToken = await USDCToken.deploy('USD Coin', 'USDC')
 
-  console.log(`USDC Coin deployed to ${usdcToken.target}`)
+  console.log(`USDC Coin deployed to ${usdcToken.address}`)
 
   const Jetpacks = await ethers.getContractFactory('NFT')
   const jetpacks = await Jetpacks.deploy(
@@ -34,6 +34,8 @@ async function main() {
     1
   )
 
+  console.log(`Jetpacks deployed to ${jetpacks.address}`)
+
   const Hoverboards = await ethers.getContractFactory('NFT')
   const hoverboards = await Hoverboards.deploy(
     'Hoverboards',
@@ -44,6 +46,8 @@ async function main() {
     'y',
     2
   )
+
+  console.log(`Hoverboards deployed to ${hoverboards.address}`)
 
   const AVAs = await ethers.getContractFactory('NFT')
   const avas = await AVAs.deploy(
@@ -56,16 +60,19 @@ async function main() {
     3
   )
 
-  const collections = [jetpacks.target, hoverboards.target, avas.target]
+  console.log(`AVAs deployed to ${avas.address}`)
+
+  const collections = [jetpacks.address, hoverboards.address, avas.address]
 
   const JACD = await hre.ethers.getContractFactory('JACD')
-  const jacd = await JACD.deploy(jacdToken.target, usdcToken.target, collections, 6, 100, 3, tokens(600))
+  const jacd = await JACD.deploy(jacdToken.address, usdcToken.address, collections, 6, 100, 3, tokens(600))
 
-  console.log(`JACD deployed to ${jacd.target}`)
+  console.log(`JACD deployed to ${jacd.address}`)
 
-  const signer = await hre.ethers.getSigner('0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266')
+  const accounts = await hre.ethers.getSigners()
+  const signer = accounts[0]
 
-  transaction = await jacdToken.connect(signer).transferOwnership(jacd)
+  transaction = await jacdToken.connect(signer).transferOwnership(jacd.address)
   await transaction.wait()
 
   console.log(`JACDToken ownership transferred to ${await jacdToken.owner()}`)
