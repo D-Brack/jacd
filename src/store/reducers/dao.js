@@ -6,7 +6,10 @@ export const dao = createSlice({
     contract: null,
     usdcBalance: 0,
     jacdSupply: 0,
-    proposals: []
+    proposals: [],
+    holderProposals: [],
+    openProposals: [],
+    closedProposals: [],
   },
   reducers: {
     setContract: (state, action) => {
@@ -20,6 +23,15 @@ export const dao = createSlice({
     },
     setProposals: (state, action) => {
       state.proposals = action.payload
+    },
+    setHolderProposals: (state, action) => {
+      state.holderProposals = action.payload
+    },
+    setOpenProposals: (state, action) => {
+      state.openProposals = action.payload
+    },
+    setClosedProposals: (state, action) => {
+      state.closedProposals = action.payload
     }
   }
 })
@@ -28,7 +40,10 @@ export const {
   setContract,
   setUSDCBalance,
   setJACDSupply,
-  setProposals
+  setProposals,
+  setHolderProposals,
+  setOpenProposals,
+  setClosedProposals
 } = dao.actions
 
 export default dao.reducer

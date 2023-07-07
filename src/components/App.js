@@ -17,7 +17,10 @@ import {
   loadTokenContracts,
   loadDAOContract,
   loadDAOBalances,
-  loadProposals
+  loadProposals,
+  loadHolderProposals,
+  loadOpenProposals,
+  loadNFTContracts
 } from '../store/interactions'
 
 function App() {
@@ -27,9 +30,12 @@ function App() {
     const provider = await loadProvider(dispatch)
     const chainId = await loadChainId(provider, dispatch)
     const tokens = await loadTokenContracts(chainId, provider, dispatch)
-    const jacdDAO = await loadDAOContract(tokens, chainId, provider, dispatch)
-    const daoBalances = await loadDAOBalances(tokens, jacdDAO, dispatch)
-    const proposals = await loadProposals(jacdDAO, dispatch)
+    const dao = await loadDAOContract(tokens, chainId, provider, dispatch)
+    const daoBalances = await loadDAOBalances(tokens, dao, dispatch)
+    const proposals = await loadProposals(dao, dispatch)
+    const holderProposals = await loadHolderProposals(proposals, dispatch)
+    const openProposals = await loadOpenProposals(proposals, dispatch)
+    const nfts = await loadNFTContracts(provider, dao, dispatch)
   }
 
   useEffect(() => {

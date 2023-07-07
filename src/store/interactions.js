@@ -3,8 +3,9 @@ import config from '../config.json'
 
 import TOKEN_ABI from '../abis/JACDToken.json'
 import DAO_ABI from '../abis/JACD.json'
+import NFT_ABI from '../abis/NFT.json'
 
-import {
+import provider, {
   setConnection,
   setChainId,
   setAccount
@@ -20,12 +21,22 @@ import {
   setContract,
   setUSDCBalance,
   setJACDSupply,
-  setProposals
+  setProposals,
+  setHolderProposals,
+  setOpenProposals,
+  setClosedProposals
 } from './reducers/dao'
+
+import {
+  setCollections,
+  setNames,
+  setNFTBalances
+} from './reducers/nfts'
 
 
 //-----------------------------------------------------------------
-// Load Network Info
+/* #region Network Info */
+
 export const loadProvider = (dispatch) => {
   const provider = new ethers.providers.Web3Provider(window.ethereum)
 
@@ -47,9 +58,10 @@ export const loadAccount = async (dispatch) => {
   dispatch(setAccount(account))
   return account
 }
+/* #endregion */
 
 //-----------------------------------------------------------------
-// Load Token Info
+/* #region Token Info */
 
 export const loadTokenContracts = async (chainId, provider, dispatch) => {
   const jacdToken = new ethers.Contract(config[chainId].jacdToken.address, TOKEN_ABI, provider)
@@ -67,22 +79,21 @@ export const loadUserBalances = async (tokens, account, dispatch) => {
   dispatch(setBalances([jacdBalance, usdcBalance]))
   return([jacdBalance, usdcBalance])
 }
+/* #endregion */
 
 //-----------------------------------------------------------------
-// Load DAO Info
+/* #region DAO Info */
 
 export const loadDAOContract = async (tokens, chainId, provider, dispatch) => {
-  const jacdDAO = new ethers.Contract(config[chainId].jacdDAO.address, DAO_ABI, provider)
+  const dao = new ethers.Contract(config[chainId].jacdDAO.address, DAO_ABI, provider)
 
-  dispatch(setContract(jacdDAO))
-  return jacdDAO
+  dispatch(setContract(dao))
+  return dao
 }
 
 export const loadDAOBalances = async (tokens, dao, dispatch) => {
   const usdcBalance = ethers.utils.formatUnits(await tokens[1].balanceOf(dao.address), 'ether')
   const jacdSupply = ethers.utils.formatUnits(await tokens[0].totalSupply(), 'ether')
-
-  console.log({usdcBalance, jacdSupply})
 
   dispatch(setUSDCBalance(usdcBalance))
   dispatch(setJACDSupply(jacdSupply))
@@ -102,9 +113,111 @@ export const loadProposals = async (dao, dispatch) => {
   return proposals
 }
 
-//-----------------------------------------------------------------
-// Load NFT Info
+export const loadHolderProposals = (proposals, dispatch) => {
+  let holderProposals = []
 
-export const loadNFTContracts = async (chainId, provider, dispatch) => {
+  for(let i = 0; i < proposals.length; i++) {
+    if (proposals[i].stage === 0) {
+      holderProposals.push(proposals[i])
+    }
+  }
 
+  dispatch(setHolderProposals(holderProposals))
+  return holderProposals
 }
+
+export const loadOpenProposals = (proposals, dispatch) => {
+  let openProposals = []
+
+  for(let i = 0; i < proposals.length; i++) {
+    if (proposals[i].stage === 1) {
+      openProposals.push(proposals[i])
+    }
+  }
+
+  dispatch(setOpenProposals(openProposals))
+  return openProposals
+}
+
+export const loadClosedProposals = (proposals, dispatch) => {
+  let closedProposals = []
+
+  for(let i = 0; i < proposals.length; i++) {
+    if (proposals[i].stage === 1) {
+      closedProposals.push(proposals[i])
+    }
+  }
+
+  dispatch(setClosedProposals(closedProposals))
+  return closedProposals
+}
+/* #endregion */
+
+//-----------------------------------------------------------------
+/* #region NFT Info */
+
+export const loadNFTContracts = async (provider, dao, dispatch) => {
+  const collections = await dao.getCollections()
+  let nfts = []
+  let names = []
+  let balances = []
+
+  for(let i = 0; i < collections.length; i++) {
+    nfts.push(new ethers.Contract(collections[i], NFT_ABI, provider))
+    names.push(await nfts[i].name())
+  }
+
+  dispatch(setCollections(nfts))
+  dispatch(setNames(names))
+  return([nfts, names])
+}
+
+export const loadNFTBalances = async (nfts, account, dispatch) => {
+  let nftBalances = []
+  for(let i = 0; i < nfts.length; i++) {
+    nftBalances.push((await nfts[i].balanceOf(account)).toString())
+  }
+
+  dispatch(setNFTBalances(nftBalances))
+  return nftBalances
+}
+/* #endregion */
+
+//-----------------------------------------------------------------
+/* #region Form Submissions */
+
+export const submitDonation = async (provider, dao, tokens, amount) => {
+  try {
+    let transaction
+
+    amount = ethers.utils.parseUnits(amount, 'ether')
+
+    const signer = provider.getSigner()
+
+    transaction = await tokens[1].connect(signer).approve(dao.address, amount)
+    await transaction.wait()
+
+    transaction = await dao.connect(signer).receiveDeposit(amount)
+    await transaction.wait()
+
+  } catch(error) {
+    window.alert('Donation Submission Failed')
+  }
+}
+
+export const createProposal = async (provider, dao, recipient, amount, description, dispatch) => {
+  try {
+    let transaction
+
+    amount = ethers.utils.parseUnits(amount, 'ether')
+
+    const signer = provider.getSigner()
+
+    transaction = await dao.connect(signer).createProposal(recipient, amount, description)
+    await transaction.wait()
+
+  } catch (error) {
+    window.alert('New proposal not recorded')
+  }
+}
+/* #endregion */

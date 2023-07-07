@@ -2,17 +2,23 @@ import Navbar from 'react-bootstrap/Navbar'
 import Button from 'react-bootstrap/Button'
 
 import { useSelector, useDispatch } from 'react-redux'
-import { loadAccount, loadUserBalances } from '../store/interactions'
+import {
+  loadAccount,
+  loadUserBalances,
+  loadNFTBalances
+} from '../store/interactions'
 
 const Navigation = () => {
   const dispatch = useDispatch()
 
-  const account = useSelector(state => state.provider.account)
-  const tokens = useSelector(state => state.tokens.contracts)
+  const account = useSelector((state) => state.provider.account)
+  const tokens = useSelector((state) => state.tokens.contracts)
+  const nfts = useSelector((state) => state.nfts.collections)
 
   const connectHandler = async () => {
     const account = await loadAccount(dispatch)
     const balances = await loadUserBalances(tokens, account, dispatch)
+    const nftBalances = await loadNFTBalances(nfts, account, dispatch)
   }
 
   return(
