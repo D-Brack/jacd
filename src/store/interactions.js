@@ -21,8 +21,10 @@ import {
   setContract,
   setUSDCBalance,
   setJACDSupply,
+  setHolderVotes,
   setProposals,
   setHolderProposals,
+  setHolderVoteStatus,
   setOpenProposals,
   setClosedProposals
 } from './reducers/dao'
@@ -88,6 +90,7 @@ export const loadDAOContract = async (tokens, chainId, provider, dispatch) => {
   const dao = new ethers.Contract(config[chainId].jacdDAO.address, DAO_ABI, provider)
 
   dispatch(setContract(dao))
+  dispatch(setHolderVotes((await dao.holderVotes()).toString()))
   return dao
 }
 
@@ -124,6 +127,19 @@ export const loadHolderProposals = (proposals, dispatch) => {
 
   dispatch(setHolderProposals(holderProposals))
   return holderProposals
+}
+
+export const loadHolderVoteStatus = async (dao, holderProposals, account, dispatch) => {
+  let voteStatus = []
+  let index
+
+  for(let i = 0; i < holderProposals.length; i++) {
+    index = holderProposals[i].index
+    voteStatus.push(await dao.holderVoted(holderProposals[i].index, account))
+  }
+
+  dispatch(setHolderVoteStatus(voteStatus))
+  return voteStatus
 }
 
 export const loadOpenProposals = (proposals, dispatch) => {
@@ -184,7 +200,7 @@ export const loadNFTBalances = async (nfts, account, dispatch) => {
 /* #endregion */
 
 //-----------------------------------------------------------------
-/* #region Form Submissions */
+/* #region Form & Vote Submissions */
 
 export const submitDonation = async (provider, dao, tokens, amount) => {
   try {
@@ -200,7 +216,7 @@ export const submitDonation = async (provider, dao, tokens, amount) => {
     transaction = await dao.connect(signer).receiveDeposit(amount)
     await transaction.wait()
 
-  } catch(error) {
+  } catch (error) {
     window.alert('Donation Submission Failed')
   }
 }
@@ -218,6 +234,34 @@ export const createProposal = async (provider, dao, recipient, amount, descripti
 
   } catch (error) {
     window.alert('New proposal not recorded')
+  }
+}
+
+export const submitHoldersVote = async (provider, dao, index, voteFor) => {
+  try {
+    let transaction
+
+    const signer = provider.getSigner()
+
+    transaction = await dao.connect(signer).holdersVote(index, voteFor)
+    await transaction.wait()
+
+  } catch (error) {
+    window.alert('Votes not submitted')
+  }
+}
+
+export const finalizeHoldersVote = async (provider, dao, index) => {
+  try {
+    let transaction
+
+    const signer = provider.getSigner()
+
+    transaction = await dao.connect(signer).finalizeHoldersVote(index)
+    await transaction.wait()
+
+  } catch (error) {
+    window.alert('Holders stage not finalized')
   }
 }
 /* #endregion */

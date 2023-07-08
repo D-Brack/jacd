@@ -6,8 +6,10 @@ export const dao = createSlice({
     contract: null,
     usdcBalance: 0,
     jacdSupply: 0,
+    holderVotes: 0,
     proposals: [],
     holderProposals: [],
+    holderVoteStatus: [],
     openProposals: [],
     closedProposals: [],
   },
@@ -21,11 +23,17 @@ export const dao = createSlice({
     setJACDSupply: (state, action) => {
       state.jacdSupply = action.payload
     },
+    setHolderVotes: (state, action) => {
+      state.holderVotes = action.payload
+    },
     setProposals: (state, action) => {
       state.proposals = action.payload
     },
     setHolderProposals: (state, action) => {
       state.holderProposals = action.payload
+    },
+    setHolderVoteStatus: (state, action) => {
+      state.holderVoteStatus = action.payload
     },
     setOpenProposals: (state, action) => {
       state.openProposals = action.payload
@@ -40,8 +48,10 @@ export const {
   setContract,
   setUSDCBalance,
   setJACDSupply,
+  setHolderVotes,
   setProposals,
   setHolderProposals,
+  setHolderVoteStatus,
   setOpenProposals,
   setClosedProposals
 } = dao.actions

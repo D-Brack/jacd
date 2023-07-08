@@ -9,6 +9,7 @@ import InputGroup from 'react-bootstrap/InputGroup'
 import {
   createProposal,
   loadHolderProposals,
+  loadHolderVoteStatus,
   loadProposals
 } from '../store/interactions'
 
@@ -29,6 +30,8 @@ const Info = () => {
   const nftBalances = useSelector((state) => state.nfts.nftBalances)
 
   const isMember = () => {
+    setIsDAOMember(false)
+
     if(balances[0] > 0) {
       setIsDAOMember(true)
       return
@@ -40,8 +43,6 @@ const Info = () => {
         return
       }
     }
-
-    setIsDAOMember(false)
   }
 
   const submitHandler = async (e) => {
@@ -50,7 +51,8 @@ const Info = () => {
     await createProposal(provider, dao, recipient, amount, description, dispatch)
 
     const proposals = await loadProposals(dao, dispatch)
-    await loadHolderProposals(proposals, dispatch)
+    const holderProposals = await loadHolderProposals(proposals, dispatch)
+    await loadHolderVoteStatus(dao, holderProposals, account, dispatch)
 
     setRecipient('')
     setAmount(0)

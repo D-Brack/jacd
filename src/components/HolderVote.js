@@ -7,35 +7,72 @@ import Table from 'react-bootstrap/Table'
 import Countdown from 'react-countdown'
 import Button from 'react-bootstrap/Button'
 
-import { loadHolderProposals } from '../store/interactions'
+import {
+  loadProposals,
+  loadHolderProposals,
+  submitHoldersVote,
+  finalizeHoldersVote,
+  loadOpenProposals,
+  loadClosedProposals,
+  loadHolderVoteStatus
+} from '../store/interactions'
 
 const HolderVote = () => {
   const dispatch = useDispatch()
 
   const [isNFTHolder, setIsNFTHolder] = useState(false)
+  const [votingClosed, setVotingClosed] = useState(false)
 
+  const provider = useSelector((state) => state.provider.connection)
   const account = useSelector((state) => state.provider.account)
   const symbols = useSelector((state) => state.tokens.symbols)
   const nftBalances = useSelector((state) => state.nfts.nftBalances)
+  const dao = useSelector((state) => state.dao.contract)
+  const holderVotes = useSelector((state) => state.dao.holderVotes)
   const holderProposals = useSelector((state) => state.dao.holderProposals)
+  const holderVoteStatus = useSelector((state) => state.dao.holderVoteStatus)
 
-  const isHolder = () => {
+  const isHolder = async () => {
+    setIsNFTHolder(false)
+
     for(let i = 0; i < nftBalances.length; i++) {
       if(nftBalances[i] > 0) {
         setIsNFTHolder(true)
         return
       }
     }
-
-    setIsNFTHolder(false)
   }
 
   const voteForHandler = async (e) => {
-    console.log('voting for...')
+    voteHandler(e.target.value, true)
   }
 
   const voteAgainstHandler = async (e) => {
-    console.log('voting against...')
+    voteHandler(e.target.value, false)
+  }
+
+  const voteHandler = async (index, voteFor) => {
+    await submitHoldersVote(provider, dao, index, voteFor)
+
+    const proposals = await loadProposals(dao, dispatch)
+    const holderProposals = await loadHolderProposals(proposals, dispatch)
+    await loadHolderVoteStatus(dao, holderProposals, account, dispatch)
+  }
+
+  const finalizeHandler = async (e) => {
+    console.log(`finalizing proposal #${e.target.value}`)
+    await finalizeHoldersVote(provider, dao, e.target.value)
+
+    const proposals = await loadProposals(dao, dispatch)
+    await loadHolderProposals(proposals, dispatch)
+    await loadOpenProposals(proposals, dispatch)
+    await loadClosedProposals(proposals, dispatch)
+  }
+
+  const hasVoted = async (index) => {
+    console.log(await dao.holderVoted(index, account))
+    const voted = await dao.holderVoted(index, account)
+    return voted
   }
 
   useEffect(() => {
@@ -73,10 +110,22 @@ const HolderVote = () => {
                       <td>{proposal.votesFor.toString()}</td>
                       <td>{proposal.votesAgainst.toString()}</td>
                       <td>
-                        <Button value={[proposal.index]} onClick={voteForHandler}>Vote For</Button>
-                        <Button className='mx-3' value={[proposal.index]} onClick={voteAgainstHandler} >Vote Against</Button>
+                        {(+(proposal.votesFor.toString()) + +(proposal.votesAgainst.toString())) === +holderVotes || votingClosed ? (
+                          <Button value={proposal.index} onClick={finalizeHandler}>Finalize</Button>
+                        ) : (
+                          <div>
+                            {holderVoteStatus[index] ? (
+                              <p>You have voted</p>
+                            ) : (
+                              <>
+                                <Button value={[proposal.index]} onClick={voteForHandler}>Vote For</Button>
+                                <Button className='mx-3' value={[proposal.index]} onClick={voteAgainstHandler} >Vote Against</Button>
+                              </>
+                            )}
+                          </div>
+                        )}
                       </td>
-                      <td><Countdown date={proposal.voteEnd * 1000} /></td>
+                      <td><Countdown date={proposal.voteEnd * 1000} onComplete={() => setVotingClosed(true)} /></td>
                     </tr>
                   ))}
                 </tbody>

@@ -5,7 +5,8 @@ import { useSelector, useDispatch } from 'react-redux'
 import {
   loadAccount,
   loadUserBalances,
-  loadNFTBalances
+  loadNFTBalances,
+  loadHolderVoteStatus
 } from '../store/interactions'
 
 const Navigation = () => {
@@ -14,11 +15,15 @@ const Navigation = () => {
   const account = useSelector((state) => state.provider.account)
   const tokens = useSelector((state) => state.tokens.contracts)
   const nfts = useSelector((state) => state.nfts.collections)
+  const dao = useSelector((state) => state.dao.contract)
+  const holderProposals = useSelector((state) => state.dao.holderProposals)
+  const openProposals = useSelector((state) => state.dao.openProposals)
 
   const connectHandler = async () => {
-    const account = await loadAccount(dispatch)
-    const balances = await loadUserBalances(tokens, account, dispatch)
-    const nftBalances = await loadNFTBalances(nfts, account, dispatch)
+    let address = await loadAccount(dispatch)
+    await loadUserBalances(tokens, address, dispatch)
+    await loadNFTBalances(nfts, address, dispatch)
+    await loadHolderVoteStatus(dao, holderProposals, address, dispatch)
   }
 
   return(
