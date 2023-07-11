@@ -14,7 +14,8 @@ import {
   finalizeHoldersVote,
   loadOpenProposals,
   loadClosedProposals,
-  loadHolderVoteStatus
+  loadHolderVoteStatus,
+  loadHolderOpenVoteStatus
 } from '../store/interactions'
 
 const HolderVote = () => {
@@ -29,6 +30,7 @@ const HolderVote = () => {
   const nftBalances = useSelector((state) => state.nfts.nftBalances)
   const dao = useSelector((state) => state.dao.contract)
   const holderVotes = useSelector((state) => state.dao.holderVotes)
+  const minHolderVotesToPass = useSelector((state) => state.dao.minHolderVotesToPass)
   const holderProposals = useSelector((state) => state.dao.holderProposals)
   const holderVoteStatus = useSelector((state) => state.dao.holderVoteStatus)
 
@@ -41,6 +43,20 @@ const HolderVote = () => {
         return
       }
     }
+  }
+
+  const buildVotingClosed = () => {
+    const votingClosed = []
+
+    for(let i = 0; i < holderProposals.length; i++) {
+      if(Date.now() < (holderProposals[i].voteEnd * 1000)) {
+        votingClosed.push(false)
+      } else {
+        votingClosed.push(true)
+      }
+    }
+
+    setVotingClosed(votingClosed)
   }
 
   const voteForHandler = async (e) => {
@@ -60,19 +76,14 @@ const HolderVote = () => {
   }
 
   const finalizeHandler = async (e) => {
-    console.log(`finalizing proposal #${e.target.value}`)
     await finalizeHoldersVote(provider, dao, e.target.value)
 
     const proposals = await loadProposals(dao, dispatch)
-    await loadHolderProposals(proposals, dispatch)
-    await loadOpenProposals(proposals, dispatch)
+    const holderProposals = await loadHolderProposals(proposals, dispatch)
+    await loadHolderVoteStatus(dao, holderProposals, account, dispatch)
+    const openProposals = await loadOpenProposals(proposals, dispatch)
+    await loadHolderOpenVoteStatus(dao, openProposals, account, dispatch)
     await loadClosedProposals(proposals, dispatch)
-  }
-
-  const hasVoted = async (index) => {
-    console.log(await dao.holderVoted(index, account))
-    const voted = await dao.holderVoted(index, account)
-    return voted
   }
 
   useEffect(() => {
@@ -82,24 +93,31 @@ const HolderVote = () => {
   }, [account, nftBalances])
 
   return(
-      <Card className='my-4'>
-        <Card.Header as='h3' >Holder Voting Proposals</Card.Header>
-        {account ? (
-          isNFTHolder ? (
-            <Card.Body>
-              <Table striped bordered hover >
-                <thead>
-                  <tr>
-                    <th>#</th>
-                    <th>Description</th>
-                    <th>Recipient</th>
-                    <th>Amount</th>
-                    <th>Votes For</th>
-                    <th>Votes Against</th>
-                    <th>Actions</th>
-                    <th>Time Remaining</th>
-                  </tr>
-                </thead>
+    <Card className='my-4'>
+      <Card.Header as='h3' >Holding Voting Proposals</Card.Header>
+      {account ? (
+        isNFTHolder ? (
+          <Card.Body>
+            <Table striped bordered hover >
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Description</th>
+                  <th>Recipient</th>
+                  <th>Amount</th>
+                  <th>Votes For</th>
+                  <th>Votes Against</th>
+                  <th>Actions</th>
+                  <th>Time Remaining</th>
+                </tr>
+              </thead>
+              {holderProposals.length === 0 ? (
+                <tbody>
+                <tr>
+                  <td colSpan='8' style={{textAlign: 'center'}}>No proposals currently in holder voting phase</td>
+                </tr>
+                </tbody>
+              ) : (
                 <tbody>
                   {holderProposals.map((proposal, index) => (
                     <tr key={index}>
@@ -114,7 +132,7 @@ const HolderVote = () => {
                           <Button value={proposal.index} onClick={finalizeHandler}>Finalize</Button>
                         ) : (
                           <div>
-                            {holderVoteStatus[index] ? (
+                            {votingClosed[index] ? (
                               <p>You have voted</p>
                             ) : (
                               <>
@@ -125,19 +143,30 @@ const HolderVote = () => {
                           </div>
                         )}
                       </td>
-                      <td><Countdown date={proposal.voteEnd * 1000} onComplete={() => setVotingClosed(true)} /></td>
+                      <td><Countdown date={(proposal.voteEnd * 1000) + 1000} onComplete={buildVotingClosed} /></td>
                     </tr>
                   ))}
                 </tbody>
-              </Table>
-            </Card.Body>
-          ) : (
-            <p>Purchase an NFT to participate in holders voting</p>
-          )
+              )}
+            </Table>
+          </Card.Body>
         ) : (
-          <p>Please connect wallet</p>
-        )}
-      </Card>
+          <Card.Body>Purchase an NFT to participate in holders voting</Card.Body>
+        )
+      ) : (
+        <Card.Body>Please connect wallet</Card.Body>
+      )}
+      <Card.Footer>
+        <Card.Subtitle>Holder Voting Specifications</Card.Subtitle>
+        <Card.Text>
+          Votes per NFT held: 1
+          <br />
+          Total holder votes: {holderVotes}
+          <br />
+          Minimum holder votes submitted to pass proposal: {minHolderVotesToPass}
+        </Card.Text>
+      </Card.Footer>
+    </Card>
   )
 }
 

@@ -6,8 +6,10 @@ import {
   loadAccount,
   loadUserBalances,
   loadNFTBalances,
-  loadHolderVoteStatus
+  loadHolderVoteStatus,
+  loadHolderOpenVoteStatus
 } from '../store/interactions'
+import { useEffect } from 'react'
 
 const Navigation = () => {
   const dispatch = useDispatch()
@@ -21,10 +23,18 @@ const Navigation = () => {
 
   const connectHandler = async () => {
     let address = await loadAccount(dispatch)
+    console.log(address)
     await loadUserBalances(tokens, address, dispatch)
     await loadNFTBalances(nfts, address, dispatch)
     await loadHolderVoteStatus(dao, holderProposals, address, dispatch)
+    await loadHolderOpenVoteStatus(dao, openProposals, address, dispatch)
   }
+
+  useEffect(() => {
+    if(account) {
+      connectHandler()
+    }
+  }, [account])
 
   return(
     <Navbar className='my-3'>

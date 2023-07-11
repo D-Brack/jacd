@@ -187,7 +187,7 @@ contract JACD {
         proposal.votesFor = 0;
         proposal.votesAgainst = 0;
         proposal.stage = VoteStage.Holder;
-        proposal.voteEnd = block.timestamp + 604800;
+        proposal.voteEnd = block.timestamp + 60;
 
         proposals[proposalCount] = proposal;
 
@@ -251,7 +251,7 @@ contract JACD {
             proposal.stage = VoteStage.All;
             proposal.votesFor = 0;
             proposal.votesAgainst = 0;
-            proposal.voteEnd = block.timestamp + 1209600;
+            proposal.voteEnd = block.timestamp + 120;
         } else {
             proposal.stage = VoteStage.Failed;
         }
@@ -271,8 +271,10 @@ contract JACD {
 
         uint256 allVotes = _tokenVotes;
 
-        for(uint256 i; i < collections.length; i++) {
-            allVotes += collections[i].balanceOf(msg.sender) * (holdersWeight * 1e18);
+        if(!holderAllVoted[_index][msg.sender]) {
+            for(uint256 i; i < collections.length; i++) {
+                allVotes += collections[i].balanceOf(msg.sender) * (holdersWeight * 1e18);
+            }
         }
 
         if (_voteFor) {

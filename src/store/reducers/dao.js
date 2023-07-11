@@ -7,10 +7,14 @@ export const dao = createSlice({
     usdcBalance: 0,
     jacdSupply: 0,
     holderVotes: 0,
+    minHolderVotesToPass: 0,
+    minVotesToFinalize: 0,
     proposals: [],
     holderProposals: [],
     holderVoteStatus: [],
+    holdersWeight: 0,
     openProposals: [],
+    holderOpenVoteStatus: [],
     closedProposals: [],
   },
   reducers: {
@@ -26,6 +30,12 @@ export const dao = createSlice({
     setHolderVotes: (state, action) => {
       state.holderVotes = action.payload
     },
+    setMinHolderVotesToPass: (state, action) => {
+      state.minHolderVotesToPass = action.payload
+    },
+    setMinVotesToFinalize: (state, action) => {
+      state.minVotesToFinalize = action.payload
+    },
     setProposals: (state, action) => {
       state.proposals = action.payload
     },
@@ -35,8 +45,14 @@ export const dao = createSlice({
     setHolderVoteStatus: (state, action) => {
       state.holderVoteStatus = action.payload
     },
+    setHoldersWeight: (state, action) => {
+      state.holdersWeight = action.payload
+    },
     setOpenProposals: (state, action) => {
       state.openProposals = action.payload
+    },
+    setHolderOpenVoteStatus: (state, action) => {
+      state.holderOpenVoteStatus = action.payload
     },
     setClosedProposals: (state, action) => {
       state.closedProposals = action.payload
@@ -49,10 +65,14 @@ export const {
   setUSDCBalance,
   setJACDSupply,
   setHolderVotes,
+  setMinHolderVotesToPass,
+  setMinVotesToFinalize,
   setProposals,
   setHolderProposals,
   setHolderVoteStatus,
+  setHoldersWeight,
   setOpenProposals,
+  setHolderOpenVoteStatus,
   setClosedProposals
 } = dao.actions
 

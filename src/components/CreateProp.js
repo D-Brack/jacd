@@ -5,6 +5,7 @@ import Card from 'react-bootstrap/Card'
 import Form from 'react-bootstrap/Form'
 import Button from 'react-bootstrap/Button'
 import InputGroup from 'react-bootstrap/InputGroup'
+import Spinner from 'react-bootstrap/Spinner'
 
 import {
   createProposal,
@@ -20,6 +21,7 @@ const Info = () => {
   const [recipient, setRecipient] = useState('')
   const [amount, setAmount] = useState(0)
   const [description, setDescription] = useState('')
+  const [isWaiting, setIsWaiting] = useState(false)
 
   const provider = useSelector((state) => state.provider.connection)
   const account = useSelector((state) => state.provider.account)
@@ -47,6 +49,7 @@ const Info = () => {
 
   const submitHandler = async (e) => {
     e.preventDefault()
+    setIsWaiting(true)
 
     await createProposal(provider, dao, recipient, amount, description, dispatch)
 
@@ -57,6 +60,7 @@ const Info = () => {
     setRecipient('')
     setAmount(0)
     setDescription('')
+    setIsWaiting(false)
   }
 
   useEffect(() => {
@@ -78,7 +82,7 @@ const Info = () => {
               </Form.Group>
               <Form.Group className='mb-3'>
                 <Form.Label>Amount</Form.Label>
-                <Form.Text>(Max Amount: {usdcBalance / 10})</Form.Text>
+                <Form.Text> (Max amount per proposal: {usdcBalance / 10} {symbols[1]})</Form.Text>
                 <InputGroup>
                   <Form.Control type='number' step='any' required onChange={(e) => setAmount(e.target.value)} value={amount}></Form.Control>
                   <InputGroup.Text>{symbols[1]}</InputGroup.Text>
@@ -88,7 +92,11 @@ const Info = () => {
                 <Form.Label>Description</Form.Label>
                 <Form.Control type='text' required onChange={(e) => setDescription(e.target.value)} value={description}></Form.Control>
               </Form.Group>
-              <Button className='mb-3' style={{width: '100%'}} type='submit'>Submit</Button>
+              {isWaiting ? (
+                <Spinner animation='border' className='d-block mx-auto' />
+              ) : (
+                <Button className='mb-3' style={{width: '100%'}} type='submit'>Submit</Button>
+              )}
             </Form>
           </Card.Body>
         ) : (

@@ -16,6 +16,12 @@ const History = () => {
   const proposals = useSelector((state) => state.dao.proposals)
   const closedProposals = useSelector((state) => state.dao.closedProposals)
 
+  const returnStage = (stage) => {
+    if(stage === '2') {return 'Finalized'}
+
+    return 'Failed'
+  }
+
   return(
       <Card className='my-4'>
         <Card.Header as='h3' >Holder Voting Proposals</Card.Header>
@@ -37,7 +43,7 @@ const History = () => {
                   <td>{proposal.description}</td>
                   <td>{`${proposal.recipient.slice(0, 6)}...${proposal.recipient.slice(-4)}`}</td>
                   <td>{ethers.utils.formatUnits(proposal.amount.toString(), 'ether')} {symbols[1]}</td>
-                  <td>{proposal.stage.toString()}</td>
+                  <td>{returnStage(proposal.stage.toString())}</td>
                 </tr>
               ))}
             </tbody>

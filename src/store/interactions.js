@@ -22,11 +22,15 @@ import {
   setUSDCBalance,
   setJACDSupply,
   setHolderVotes,
+  setMinHolderVotesToPass,
+  setMinVotesToFinalize,
   setProposals,
   setHolderProposals,
   setHolderVoteStatus,
   setOpenProposals,
-  setClosedProposals
+  setHolderOpenVoteStatus,
+  setClosedProposals,
+  setHoldersWeight
 } from './reducers/dao'
 
 import {
@@ -91,6 +95,9 @@ export const loadDAOContract = async (tokens, chainId, provider, dispatch) => {
 
   dispatch(setContract(dao))
   dispatch(setHolderVotes((await dao.holderVotes()).toString()))
+  dispatch(setHoldersWeight((await dao.holdersWeight()).toString()))
+  dispatch(setMinHolderVotesToPass((await dao.minHolderVotesToPass()).toString()))
+  dispatch(setMinVotesToFinalize((await dao.minVotesToFinalize()).toString()))
   return dao
 }
 
@@ -135,7 +142,7 @@ export const loadHolderVoteStatus = async (dao, holderProposals, account, dispat
 
   for(let i = 0; i < holderProposals.length; i++) {
     index = holderProposals[i].index
-    voteStatus.push(await dao.holderVoted(holderProposals[i].index, account))
+    voteStatus.push(await dao.holderVoted(index, account))
   }
 
   dispatch(setHolderVoteStatus(voteStatus))
@@ -155,11 +162,24 @@ export const loadOpenProposals = (proposals, dispatch) => {
   return openProposals
 }
 
+export const loadHolderOpenVoteStatus = async (dao, openProposals, account, dispatch) => {
+  let voteStatus = []
+  let index
+
+  for(let i = 0; i < openProposals.length; i++) {
+    index = openProposals[i].index
+    voteStatus.push(await dao.holderAllVoted(openProposals[i].index, account))
+  }
+
+  dispatch(setHolderOpenVoteStatus(voteStatus))
+  return voteStatus
+}
+
 export const loadClosedProposals = (proposals, dispatch) => {
   let closedProposals = []
 
   for(let i = 0; i < proposals.length; i++) {
-    if (proposals[i].stage === 1) {
+    if (proposals[i].stage === 2 || proposals[i].stage === 3) {
       closedProposals.push(proposals[i])
     }
   }
@@ -247,7 +267,7 @@ export const submitHoldersVote = async (provider, dao, index, voteFor) => {
     await transaction.wait()
 
   } catch (error) {
-    window.alert('Votes not submitted')
+    window.alert('Votes submission failed')
   }
 }
 
@@ -261,7 +281,44 @@ export const finalizeHoldersVote = async (provider, dao, index) => {
     await transaction.wait()
 
   } catch (error) {
-    window.alert('Holders stage not finalized')
+    window.alert('Holders stage finalization failed')
+  }
+}
+
+export const submitOpenVote = async (provider, dao, tokens, index, voteFor, jacdVotes) => {
+  try {
+    let transaction
+
+    const signer = provider.getSigner()
+
+    if(jacdVotes > 0) {
+      jacdVotes = ethers.utils.parseUnits(jacdVotes.toString(), 'ether')
+
+      console.log(jacdVotes)
+
+      transaction = await tokens[0].connect(signer).approve(dao.address, jacdVotes)
+      await transaction.wait()
+    }
+
+    transaction = await dao.connect(signer).allVote(index, voteFor, jacdVotes)
+    await transaction.wait()
+
+  } catch (error) {
+    window.alert('Votes submission failed')
+  }
+}
+
+export const finalizeProposal = async (provider, dao, index) => {
+  try {
+    let transaction
+
+    const signer = provider.getSigner()
+
+    transaction = await dao.connect(signer).finalizeProposal(index)
+    await transaction.wait()
+
+  } catch (error) {
+    window.alert('Proposal failed to finalize')
   }
 }
 /* #endregion */

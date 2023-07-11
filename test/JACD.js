@@ -7,6 +7,7 @@ const tokens = (amount) => {
 }
 
 const ether = tokens
+const votes = tokens
 
 describe('JACD', () => {
   const AMOUNT = tokens(100)
@@ -515,6 +516,9 @@ describe('JACD', () => {
       transaction = await jacdDAO.connect(contributor).receiveDeposit(tokens(1))
       await transaction.wait()
 
+      transaction = await jacdToken.connect(deployer).approve(jacdDAO.address, tokens(1))
+      await transaction.wait()
+
       transaction = await jacdToken.connect(contributor).approve(jacdDAO.address, tokens(1))
       await transaction.wait()
     })
@@ -527,19 +531,42 @@ describe('JACD', () => {
         transaction = await jacdDAO.connect(deployer).allVote(1, false, 0)
         await transaction.wait()
 
-        transaction = await jacdDAO.connect(contributor).allVote(1, true, tokens(1))
+        transaction = await jacdDAO.connect(contributor).allVote(1, true, votes(1))
         await transaction.wait()
       })
 
       it('records the votes', async () => {
         let proposal = await jacdDAO.proposals(1)
 
-        expect(proposal.votesFor).to.equal(tokens(401))
-        expect(proposal.votesAgainst).to.equal(tokens(200))
+        expect(proposal.votesFor).to.equal(votes(401))
+        expect(proposal.votesAgainst).to.equal(votes(200))
       })
 
       it('updates a holders voting status', async () => {
         expect(await jacdDAO.holderAllVoted(1, holder.address)).to.equal(true)
+      })
+
+      it('allows holder to submit second jacd tokens only vote', async () => {
+        transaction = await usdcToken.connect(deployer).mint(holder.address, tokens(1))
+        await transaction.wait()
+
+        transaction = await usdcToken.connect(holder).approve(jacdDAO.address, tokens(1))
+        await transaction.wait()
+
+        transaction = await jacdDAO.connect(holder).receiveDeposit(tokens(1))
+        await transaction.wait()
+
+        transaction = await jacdToken.connect(holder).approve(jacdDAO.address, tokens(1))
+        await transaction.wait()
+
+        expect(await jacdDAO.holderAllVoted(1, holder.address)).to.equal(true)
+
+        transaction = await jacdDAO.connect(holder).allVote(1, true, votes(1))
+        await transaction.wait()
+
+        let proposal = await jacdDAO.proposals(1)
+
+        expect(proposal.votesFor).to.equal(votes(402))
       })
 
       it('burns JACD tokens for votes', async () => {
@@ -553,7 +580,7 @@ describe('JACD', () => {
           contributor.address,
           1,
           true,
-          tokens(1),
+          votes(1),
           (await ethers.provider.getBlock(await ethers.provider.getBlockNumber())).timestamp
         )
       })
@@ -569,15 +596,15 @@ describe('JACD', () => {
         transaction = await jacdDAO.connect(holder).allVote(1, true, 0)
         await transaction.wait()
 
-        await expect(jacdDAO.connect(holder).allVote(1, true, tokens(1)))
+        await expect(jacdDAO.connect(holder).allVote(1, true, votes(1)))
           .to.be.rejectedWith('JACD: no votes/already voted')
       })
 
       it('rejects voting more than amount of JACD token balance', async () => {
-        transaction = await jacdToken.connect(contributor).approve(jacdDAO.address, tokens(1000))
+        transaction = await jacdToken.connect(contributor).approve(jacdDAO.address, votes(1000))
         await transaction.wait()
 
-        await expect(jacdDAO.connect(contributor).allVote(1, true, tokens(101.01)))
+        await expect(jacdDAO.connect(contributor).allVote(1, true, votes(101.01)))
           .to.be.revertedWith('JACD: insufficient JACD token votes')
       })
 
