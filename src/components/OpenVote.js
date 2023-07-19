@@ -9,6 +9,7 @@ import Countdown from 'react-countdown'
 import Button from 'react-bootstrap/Button'
 import Modal from 'react-bootstrap/Modal'
 import Form from 'react-bootstrap/Form'
+import Spinner from 'react-bootstrap/Spinner'
 
 import {
   loadUserBalances,
@@ -32,10 +33,10 @@ const OpenVote = () => {
   const [isContributor, setIsContributor] = useState(false)
   const [showModal, setShowModal] = useState(false)
   const [jacdVotes, setJACDVotes] = useState(0)
-  const [voteFor, setVoteFor] = useState(false)
-  const [propIndex, setPropIndex] = useState(0)
   const [votedStatusIndex, setVoteStatusIndex] = useState(null)
   const [votingClosed, setVotingClosed] = useState(null)
+  const [selectedProposal, setSelectedProposal] = useState(null)
+  const [isVoting, setIsVoting] = useState(false)
 
   const provider = useSelector((state) => state.provider.connection)
   const account = useSelector((state) => state.provider.account)
@@ -90,22 +91,44 @@ const OpenVote = () => {
     setVotingClosed(votingClosed)
   }
 
-  const voteForHandler = (e) => {
-    setPropIndex(e.target.value[0])
-    setVoteStatusIndex(e.target.value[2])
-    setVoteFor(true)
+  const showVoteModal = (e) => {
     setShowModal(true)
+    const proposal = e.target.value.split(',')
+    setVoteStatusIndex(proposal[9])
+    setSelectedProposal(proposal)
   }
 
-  const voteAgainstHandler = (e) => {
-    setPropIndex(e.target.value[0])
-    setVoteStatusIndex(e.target.value[2])
-    setVoteFor(false)
-    setShowModal(true)
+  const dismissModal = () => {
+    setShowModal(false)
+    setJACDVotes(0)
   }
 
-  const voteHandler = async () => {
-    await submitOpenVote(provider, dao, tokens, propIndex, voteFor, jacdVotes, dispatch)
+  // const voteForHandler = (e) => {
+  //   setPropIndex(e.target.value[0])
+  //   setVoteStatusIndex(e.target.value[2])
+  //   setVoteFor(true)
+  //   setShowModal(true)
+  // }
+
+  // const voteAgainstHandler = (e) => {
+  //   setPropIndex(e.target.value[0])
+  //   setVoteStatusIndex(e.target.value[2])
+  //   setVoteFor(false)
+  //   setShowModal(true)
+  // }
+
+  const voteHandler = async (e) => {
+    setIsVoting(true)
+
+    let voteFor
+
+    if(e.target.value === true) {
+      voteFor = true
+    } else {
+      voteFor = false
+    }
+
+    await submitOpenVote(provider, dao, tokens, selectedProposal[0], voteFor, jacdVotes, dispatch)
 
     await loadUserBalances(tokens, account, dispatch)
     const proposals = await loadProposals(dao, dispatch)
@@ -113,11 +136,7 @@ const OpenVote = () => {
     await loadHolderOpenVoteStatus(dao, openProposals, account, dispatch)
 
     dismissModal()
-  }
-
-  const dismissModal = () => {
-    setShowModal(false)
-    setJACDVotes(0)
+    setIsVoting(false)
   }
 
   const finalizeHandler = async (e) => {
@@ -152,7 +171,7 @@ const OpenVote = () => {
               <thead>
                 <tr>
                   <th>#</th>
-                  <th>Description</th>
+                  <th>Name</th>
                   <th>Recipient</th>
                   <th>Amount</th>
                   <th>Votes For</th>
@@ -172,7 +191,7 @@ const OpenVote = () => {
                   {openProposals.map((proposal, index) => (
                     <tr key={index}>
                       <td>{proposal.index.toString()}</td>
-                      <td>{proposal.description}</td>
+                      <td>{proposal.name}</td>
                       <td>{`${proposal.recipient.slice(0, 6)}...${proposal.recipient.slice(-4)}`}</td>
                       <td>{ethers.utils.formatUnits(proposal.amount.toString(), 'ether')} {symbols[1]}</td>
                       <td>{ethers.utils.formatUnits(proposal.votesFor.toString(), 'ether')}</td>
@@ -186,8 +205,7 @@ const OpenVote = () => {
                               <p>No votes remaining</p>
                             ) : (
                               <div>
-                                <Button value={[proposal.index, index]} onClick={voteForHandler}>Vote For</Button>
-                                <Button className='mx-3' value={[proposal.index, index]} onClick={voteAgainstHandler} >Vote Against</Button>
+                                <Button value={[proposal, index]} onClick={showVoteModal}>View/Vote</Button>
                                 {holderOpenVoteStatus[index] ? <span>(holder votes submitted)</span> : ''}
                               </div>
                         )))}
@@ -215,36 +233,49 @@ const OpenVote = () => {
         </Card.Footer>
       </Card>
 
-      <Modal show={showModal} onHide={dismissModal} centered backdrop='static'>
-        <Modal.Header closeButton>
-          <Modal.Title>Submit Votes</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          {isHolder ? (
-              holderOpenVoteStatus[votedStatusIndex] ? (
-                <p>Holder votes already submitted.</p>
-              ) : (
-                <p>{`Submitting ${userHolderVotes} NFT holder's votes.`}</p>
-              )
-          ) : (
-            <></>
-          )}
-          {isContributor ? (
-          <Form>
-            <Form.Group>
-              <Form.Label>JACD votes to submit {`(${balances[0]} JACD available)`}</Form.Label>
-              <Form.Control type='number' step='any' value={jacdVotes} onChange={(e) => setJACDVotes(e.target.value)} max={balances[0]} min={0} required></Form.Control>
-            </Form.Group>
-          </Form>
-          ) : (
-            <></>
-          )}
-        </Modal.Body>
-        <Modal.Footer>
-          <Button onClick={dismissModal}>Close</Button>
-          <Button onClick={voteHandler}>Submit</Button>
-        </Modal.Footer>
-      </Modal>
+      {selectedProposal && (
+        <Modal show={showModal} onHide={dismissModal} centered backdrop='static'>
+          <Modal.Header closeButton>
+            <Modal.Title>{selectedProposal[3]}</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            <p><strong>Recepient: </strong>{selectedProposal[1].slice(0, 6)}...{selectedProposal[1].slice(-4)}</p>
+            <p><strong>Amount: </strong>{ethers.utils.formatUnits(selectedProposal[2], 'ether')} {symbols[1]}</p>
+            <p><strong>Description: </strong>{selectedProposal[4]}</p>
+            {isHolder ? (
+                holderOpenVoteStatus[votedStatusIndex] ? (
+                  <p style={{color: 'red'}}>Holder votes already submitted.</p>
+                ) : (
+                  <p><strong>Holder Votes To Submit: </strong>{userHolderVotes}</p>
+                  // <p>{`Submitting ${userHolderVotes} NFT holder's votes.`}</p>
+                )
+            ) : (
+              <></>
+            )}
+            {isContributor ? (
+            <Form>
+              <Form.Group>
+                <Form.Label><strong>JACD votes to submit</strong> {`(${balances[0]} JACD available)`}<strong></strong></Form.Label>
+                <Form.Control type='number' step='any' value={jacdVotes} onChange={(e) => setJACDVotes(e.target.value)} max={balances[0]} min={0} required></Form.Control>
+              </Form.Group>
+            </Form>
+            ) : (
+              <></>
+            )}
+          </Modal.Body>
+          <Modal.Footer>
+            {isVoting ? (
+              <Spinner animation='border' className='d-block mx-auto' />
+            ) : (
+              <div  className='d-block mx-auto'>
+                <Button onClick={voteHandler} value={true}>Vote For</Button>
+                <Button className='mx-2' onClick={voteHandler} value={false}>Vote Against</Button>
+                <Button onClick={dismissModal}>Cancel</Button>
+              </div>
+            )}
+          </Modal.Footer>
+        </Modal>
+      )}
     </>
   )
 }

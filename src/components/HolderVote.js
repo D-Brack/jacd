@@ -6,6 +6,8 @@ import Card from 'react-bootstrap/Card'
 import Table from 'react-bootstrap/Table'
 import Countdown from 'react-countdown'
 import Button from 'react-bootstrap/Button'
+import Modal from 'react-bootstrap/Modal'
+import Spinner from 'react-bootstrap/Spinner'
 
 import {
   loadProposals,
@@ -21,8 +23,11 @@ import {
 const HolderVote = () => {
   const dispatch = useDispatch()
 
-  const [isNFTHolder, setIsNFTHolder] = useState(false)
+  const [userHolderVotes, setUserHolderVotes] = useState(0)
   const [votingClosed, setVotingClosed] = useState(false)
+  const [showModal, setShowModal] = useState(false)
+  const [selectedProposal, setSelectedProposal] = useState(null)
+  const [isVoting, setIsVoting] = useState(false)
 
   const provider = useSelector((state) => state.provider.connection)
   const account = useSelector((state) => state.provider.account)
@@ -34,15 +39,16 @@ const HolderVote = () => {
   const holderProposals = useSelector((state) => state.dao.holderProposals)
   const holderVoteStatus = useSelector((state) => state.dao.holderVoteStatus)
 
-  const isHolder = async () => {
-    setIsNFTHolder(false)
+  const getVotes = async () => {
+    let votes = 0
 
     for(let i = 0; i < nftBalances.length; i++) {
-      if(nftBalances[i] > 0) {
-        setIsNFTHolder(true)
-        return
+      if(+nftBalances[i] > 0) {
+        votes += +nftBalances[i]
       }
     }
+
+    setUserHolderVotes(votes)
   }
 
   const buildVotingClosed = () => {
@@ -59,20 +65,36 @@ const HolderVote = () => {
     setVotingClosed(votingClosed)
   }
 
-  const voteForHandler = async (e) => {
-    voteHandler(e.target.value, true)
+  const showVoteModal = (e) => {
+    setShowModal(true)
+    const proposal = e.target.value.split(',')
+    setSelectedProposal(proposal)
   }
 
-  const voteAgainstHandler = async (e) => {
-    voteHandler(e.target.value, false)
+  const dismissModal = () => {
+    setShowModal(false)
+    setSelectedProposal(null)
   }
 
-  const voteHandler = async (index, voteFor) => {
-    await submitHoldersVote(provider, dao, index, voteFor)
+  const voteHandler = async (e) => {
+    setIsVoting(true)
+
+    let voteFor
+
+    if(e.target.value === true) {
+      voteFor = true
+    } else {
+      voteFor = false
+    }
+
+    await submitHoldersVote(provider, dao, selectedProposal[0], voteFor)
 
     const proposals = await loadProposals(dao, dispatch)
     const holderProposals = await loadHolderProposals(proposals, dispatch)
     await loadHolderVoteStatus(dao, holderProposals, account, dispatch)
+
+    dismissModal()
+    setIsVoting(false)
   }
 
   const finalizeHandler = async (e) => {
@@ -88,84 +110,110 @@ const HolderVote = () => {
 
   useEffect(() => {
     if(account) {
-      isHolder()
+      getVotes()
     }
   }, [account, nftBalances])
 
   return(
-    <Card className='my-4'>
-      <Card.Header as='h3' >Holding Voting Proposals</Card.Header>
-      {account ? (
-        <Card.Body>
-          <Table striped bordered hover >
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>Description</th>
-                <th>Recipient</th>
-                <th>Amount</th>
-                <th>Votes For</th>
-                <th>Votes Against</th>
-                <th>Actions</th>
-                <th>Time Remaining</th>
-              </tr>
-            </thead>
-            {holderProposals.length === 0 ? (
-              <tbody>
-              <tr>
-                <td colSpan='8' style={{textAlign: 'center'}}>No proposals currently in holder voting phase</td>
-              </tr>
-              </tbody>
+    <>
+      <Card className='my-4'>
+        <Card.Header as='h3' >Holding Voting Proposals</Card.Header>
+        {account ? (
+          <Card.Body>
+            <Table striped bordered hover >
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Name</th>
+                  <th>Recipient</th>
+                  <th>Amount</th>
+                  <th>Votes For</th>
+                  <th>Votes Against</th>
+                  <th>Actions</th>
+                  <th>Time Remaining</th>
+                </tr>
+              </thead>
+              {holderProposals.length === 0 ? (
+                <tbody>
+                <tr>
+                  <td colSpan='8' style={{textAlign: 'center'}}>No proposals currently in holder voting phase</td>
+                </tr>
+                </tbody>
+              ) : (
+                <tbody>
+                  {holderProposals.map((proposal, index) => (
+                    <tr key={index}>
+                      <td>{proposal.index.toString()}</td>
+                      <td>{proposal.name}</td>
+                      <td>{`${proposal.recipient.slice(0, 6)}...${proposal.recipient.slice(-4)}`}</td>
+                      <td>{ethers.utils.formatUnits(proposal.amount.toString(), 'ether')} {symbols[1]}</td>
+                      <td>{proposal.votesFor.toString()}</td>
+                      <td>{proposal.votesAgainst.toString()}</td>
+                      <td>
+                        {userHolderVotes > 0 && (
+                          (+(proposal.votesFor.toString()) + +(proposal.votesAgainst.toString())) === +holderVotes || votingClosed[index] ? (
+                            <Button value={proposal.index} onClick={finalizeHandler}>Finalize</Button>
+                          ) : (
+                            <div>
+                              {holderVoteStatus[index] ? (
+                                <p>You have voted</p>
+                              ) : (
+                                <>
+                                  <Button value={proposal} onClick={showVoteModal}>View/Vote</Button>
+                                </>
+                                )
+                              }
+                            </div>
+                        ))}
+                      </td>
+                      <td><Countdown date={(proposal.voteEnd * 1000) + 1000} onComplete={buildVotingClosed} /></td>
+                    </tr>
+                  ))}
+                </tbody>
+              )}
+            </Table>
+            {userHolderVotes === 0 && <p style={{color: 'red'}}>Purchase a NFT to participate in holder voting.</p>}
+          </Card.Body>
+        ) : (
+          <Card.Body>Please connect wallet</Card.Body>
+        )}
+        <Card.Footer>
+          <Card.Subtitle>Holder Voting Specifications</Card.Subtitle>
+          <Card.Text>
+            Votes per NFT held: 1
+            <br />
+            Total holder votes: {holderVotes}
+            <br />
+            Minimum holder votes submitted to pass proposal: {minHolderVotesToPass}
+          </Card.Text>
+        </Card.Footer>
+      </Card>
+
+      {selectedProposal && (
+        <Modal show={showModal} onHide={dismissModal} centered backdrop='static'>
+          <Modal.Header closeButton>
+            <Modal.Title>{selectedProposal[3]}</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            <p><strong>Recepient: </strong>{selectedProposal[1].slice(0, 6)}...{selectedProposal[1].slice(-4)}</p>
+            <p><strong>Amount: </strong>{ethers.utils.formatUnits(selectedProposal[2], 'ether')} {symbols[1]}</p>
+            <p><strong>Description: </strong>{selectedProposal[4]}</p>
+            <p><strong>Holder Votes To Submit: </strong>{userHolderVotes}</p>
+          </Modal.Body>
+          <Modal.Footer>
+            {isVoting ? (
+              <Spinner animation='border' className='d-block mx-auto' />
             ) : (
-              <tbody>
-                {holderProposals.map((proposal, index) => (
-                  <tr key={index}>
-                    <td>{proposal.index.toString()}</td>
-                    <td>{proposal.description}</td>
-                    <td>{`${proposal.recipient.slice(0, 6)}...${proposal.recipient.slice(-4)}`}</td>
-                    <td>{ethers.utils.formatUnits(proposal.amount.toString(), 'ether')} {symbols[1]}</td>
-                    <td>{proposal.votesFor.toString()}</td>
-                    <td>{proposal.votesAgainst.toString()}</td>
-                    <td>
-                      {isNFTHolder && (
-                        (+(proposal.votesFor.toString()) + +(proposal.votesAgainst.toString())) === +holderVotes || votingClosed ? (
-                          <Button value={proposal.index} onClick={finalizeHandler}>Finalize</Button>
-                        ) : (
-                          <div>
-                            {votingClosed[index] ? (
-                              <p>You have voted</p>
-                            ) : (
-                              <>
-                                <Button value={[proposal.index]} onClick={voteForHandler}>Vote For</Button>
-                                <Button className='mx-3' value={[proposal.index]} onClick={voteAgainstHandler} >Vote Against</Button>
-                              </>
-                              )
-                            }
-                          </div>
-                      ))}
-                    </td>
-                    <td><Countdown date={(proposal.voteEnd * 1000) + 1000} onComplete={buildVotingClosed} /></td>
-                  </tr>
-                ))}
-              </tbody>
+              <div  className='d-block mx-auto'>
+                <Button onClick={voteHandler} value={true}>Vote For</Button>
+                <Button className='mx-2' onClick={voteHandler} value={false}>Vote Against</Button>
+                <Button onClick={dismissModal}>Cancel</Button>
+              </div>
             )}
-          </Table>
-          {!isNFTHolder && <p style={{color: 'red'}}>Purchase a NFT to participate in holder voting.</p>}
-        </Card.Body>
-      ) : (
-        <Card.Body>Please connect wallet</Card.Body>
+          </Modal.Footer>
+        </Modal>
       )}
-      <Card.Footer>
-        <Card.Subtitle>Holder Voting Specifications</Card.Subtitle>
-        <Card.Text>
-          Votes per NFT held: 1
-          <br />
-          Total holder votes: {holderVotes}
-          <br />
-          Minimum holder votes submitted to pass proposal: {minHolderVotesToPass}
-        </Card.Text>
-      </Card.Footer>
-    </Card>
+    </>
   )
 }
 

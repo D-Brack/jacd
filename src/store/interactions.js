@@ -71,7 +71,6 @@ export const loadAccount = async (dispatch) => {
 /* #region Token Info */
 
 export const loadTokenContracts = async (chainId, provider, dispatch) => {
-  console.log('in loadTokensContracts', chainId)
   const jacdToken = new ethers.Contract(config[chainId].jacdToken.address, TOKEN_ABI, provider)
   const usdcToken = new ethers.Contract(config[chainId].usdcToken.address, TOKEN_ABI, provider)
 
@@ -244,7 +243,7 @@ export const submitDonation = async (provider, dao, tokens, amount) => {
   }
 }
 
-export const createProposal = async (provider, dao, recipient, amount, description, dispatch) => {
+export const createProposal = async (provider, dao, recipient, amount, name, description, dispatch) => {
   try {
     let transaction
 
@@ -252,7 +251,7 @@ export const createProposal = async (provider, dao, recipient, amount, descripti
 
     const signer = provider.getSigner()
 
-    transaction = await dao.connect(signer).createProposal(recipient, amount, description)
+    transaction = await dao.connect(signer).createProposal(recipient, amount, name, description)
     await transaction.wait()
 
   } catch (error) {

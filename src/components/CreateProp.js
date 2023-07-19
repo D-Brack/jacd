@@ -20,7 +20,7 @@ const Info = () => {
   const [isDAOMember, setIsDAOMember] = useState(false)
   const [recipient, setRecipient] = useState('')
   const [amount, setAmount] = useState(0)
-  const [name, setName] = useState(0)
+  const [name, setName] = useState('')
   const [description, setDescription] = useState('')
   const [isWaiting, setIsWaiting] = useState(false)
 
@@ -53,7 +53,7 @@ const Info = () => {
     e.preventDefault()
     setIsWaiting(true)
 
-    await createProposal(provider, dao, recipient, amount, description, dispatch)
+    await createProposal(provider, dao, recipient, amount, name, description, dispatch)
 
     const proposals = await loadProposals(dao, dispatch)
     const holderProposals = await loadHolderProposals(proposals, dispatch)
@@ -61,6 +61,7 @@ const Info = () => {
 
     setRecipient('')
     setAmount(0)
+    setName('')
     setDescription('')
     setIsWaiting(false)
   }
@@ -80,7 +81,7 @@ const Info = () => {
             <Form onSubmit={submitHandler}>
               <Form.Group className='mb-3'>
                 <Form.Label>Recipient</Form.Label>
-                <Form.Control type='text' required onChange={(e) => setRecipient(e.target.value)} value={recipient}></Form.Control>
+                <Form.Control type='text' required onChange={(e) => setRecipient(e.target.value)} value={recipient} placeholder='Enter wallet address'></Form.Control>
               </Form.Group>
               <Form.Group className='mb-3'>
                 <Form.Label>Amount</Form.Label>
@@ -92,11 +93,11 @@ const Info = () => {
               </Form.Group>
               <Form.Group className='mb-3'>
                 <Form.Label>Name</Form.Label>
-                <Form.Control type='text' required onChange={(e) => setName(e.target.value)} value={description}></Form.Control>
+                <Form.Control type='text' required onChange={(e) => setName(e.target.value)} value={name} placeholder='Enter proposal name'></Form.Control>
               </Form.Group>
               <Form.Group className='mb-3'>
                 <Form.Label>Description</Form.Label>
-                <Form.Control type='textbox' required onChange={(e) => setDescription(e.target.value)} value={description}></Form.Control>
+                <Form.Control type='textbox' required onChange={(e) => setDescription(e.target.value)} value={description} placeholder='Enter proposal description'></Form.Control>
               </Form.Group>
               {isWaiting ? (
                 <Spinner animation='border' className='d-block mx-auto' />

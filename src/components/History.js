@@ -30,23 +30,31 @@ const History = () => {
             <thead>
               <tr>
                 <th>#</th>
-                <th>Description</th>
+                <th>Name</th>
                 <th>Recipient</th>
                 <th>Amount</th>
                 <th>Status</th>
               </tr>
             </thead>
-            <tbody>
-              {closedProposals.map((proposal, index) => (
-                <tr key={index}>
-                  <td>{proposal.index.toString()}</td>
-                  <td>{proposal.description}</td>
-                  <td>{`${proposal.recipient.slice(0, 6)}...${proposal.recipient.slice(-4)}`}</td>
-                  <td>{ethers.utils.formatUnits(proposal.amount.toString(), 'ether')} {symbols[1]}</td>
-                  <td>{returnStage(proposal.stage.toString())}</td>
+              {closedProposals.length === 0 ? (
+                <tbody>
+                <tr>
+                  <td colSpan='5' style={{textAlign: 'center'}}>No finalized or failed proposals</td>
                 </tr>
-              ))}
-            </tbody>
+                </tbody>
+              ) : (
+                <tbody>
+                  {closedProposals.map((proposal, index) => (
+                    <tr key={index}>
+                      <td>{proposal.index.toString()}</td>
+                      <td>{proposal.name}</td>
+                      <td>{`${proposal.recipient.slice(0, 6)}...${proposal.recipient.slice(-4)}`}</td>
+                      <td>{ethers.utils.formatUnits(proposal.amount.toString(), 'ether')} {symbols[1]}</td>
+                      <td>{returnStage(proposal.stage.toString())}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              )}
           </Table>
         </Card.Body>
       </Card>

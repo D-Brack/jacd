@@ -59,7 +59,7 @@ const Info = () => {
           <Card.Text>
             <strong>Currently Active Proposals: </strong>{holderProposals.length + openProposals.length}<br />
             <span>Holders only voting stage: {holderProposals.length}<br /></span>
-            <span>Open voting stage: {holderProposals.length}</span>
+            <span>Open voting stage: {openProposals.length}</span>
           </Card.Text>
 
           <hr />
