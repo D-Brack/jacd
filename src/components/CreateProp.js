@@ -20,6 +20,7 @@ const Info = () => {
   const [isDAOMember, setIsDAOMember] = useState(false)
   const [recipient, setRecipient] = useState('')
   const [amount, setAmount] = useState(0)
+  const [name, setName] = useState(0)
   const [description, setDescription] = useState('')
   const [isWaiting, setIsWaiting] = useState(false)
 
@@ -29,6 +30,7 @@ const Info = () => {
   const balances = useSelector((state) => state.tokens.balances)
   const dao = useSelector((state) => state.dao.contract)
   const usdcBalance = useSelector((state) => state.dao.usdcBalance)
+  const maxPropAmtPercent = useSelector((state) => state.dao.maxProposalAmountPercent)
   const nftBalances = useSelector((state) => state.nfts.nftBalances)
 
   const isMember = () => {
@@ -82,15 +84,19 @@ const Info = () => {
               </Form.Group>
               <Form.Group className='mb-3'>
                 <Form.Label>Amount</Form.Label>
-                <Form.Text> (Max amount per proposal: {usdcBalance / 10} {symbols[1]})</Form.Text>
+                <Form.Text> (Max amount per proposal: {maxPropAmtPercent * usdcBalance / 100} {symbols[1]})</Form.Text>
                 <InputGroup>
                   <Form.Control type='number' step='any' required onChange={(e) => setAmount(e.target.value)} value={amount}></Form.Control>
                   <InputGroup.Text>{symbols[1]}</InputGroup.Text>
                 </InputGroup>
               </Form.Group>
               <Form.Group className='mb-3'>
+                <Form.Label>Name</Form.Label>
+                <Form.Control type='text' required onChange={(e) => setName(e.target.value)} value={description}></Form.Control>
+              </Form.Group>
+              <Form.Group className='mb-3'>
                 <Form.Label>Description</Form.Label>
-                <Form.Control type='text' required onChange={(e) => setDescription(e.target.value)} value={description}></Form.Control>
+                <Form.Control type='textbox' required onChange={(e) => setDescription(e.target.value)} value={description}></Form.Control>
               </Form.Group>
               {isWaiting ? (
                 <Spinner animation='border' className='d-block mx-auto' />
@@ -100,7 +106,7 @@ const Info = () => {
             </Form>
           </Card.Body>
         ) : (
-          <p>Contribute to DAO or buy NFT to submit new proposals</p>
+          <Card.Body style={{color: 'red'}}>Purchase a NFT or donate to DAO to submit new proposals</Card.Body>
         )
       ) : (
         <p>Please connect your wallet</p>

@@ -21,6 +21,8 @@ import {
   setContract,
   setUSDCBalance,
   setJACDSupply,
+  setMaxProposalAmountPercent,
+  setHoldersWeight,
   setHolderVotes,
   setMinHolderVotesToPass,
   setMinVotesToFinalize,
@@ -29,8 +31,7 @@ import {
   setHolderVoteStatus,
   setOpenProposals,
   setHolderOpenVoteStatus,
-  setClosedProposals,
-  setHoldersWeight
+  setClosedProposals
 } from './reducers/dao'
 
 import {
@@ -70,6 +71,7 @@ export const loadAccount = async (dispatch) => {
 /* #region Token Info */
 
 export const loadTokenContracts = async (chainId, provider, dispatch) => {
+  console.log('in loadTokensContracts', chainId)
   const jacdToken = new ethers.Contract(config[chainId].jacdToken.address, TOKEN_ABI, provider)
   const usdcToken = new ethers.Contract(config[chainId].usdcToken.address, TOKEN_ABI, provider)
 
@@ -94,6 +96,7 @@ export const loadDAOContract = async (tokens, chainId, provider, dispatch) => {
   const dao = new ethers.Contract(config[chainId].jacdDAO.address, DAO_ABI, provider)
 
   dispatch(setContract(dao))
+  dispatch(setMaxProposalAmountPercent((await dao.maxProposalAmountPercent()).toString()))
   dispatch(setHolderVotes((await dao.holderVotes()).toString()))
   dispatch(setHoldersWeight((await dao.holdersWeight()).toString()))
   dispatch(setMinHolderVotesToPass((await dao.minHolderVotesToPass()).toString()))
@@ -168,7 +171,7 @@ export const loadHolderOpenVoteStatus = async (dao, openProposals, account, disp
 
   for(let i = 0; i < openProposals.length; i++) {
     index = openProposals[i].index
-    voteStatus.push(await dao.holderAllVoted(openProposals[i].index, account))
+    voteStatus.push(await dao.holderOpenVoted(openProposals[i].index, account))
   }
 
   dispatch(setHolderOpenVoteStatus(voteStatus))
@@ -300,7 +303,7 @@ export const submitOpenVote = async (provider, dao, tokens, index, voteFor, jacd
       await transaction.wait()
     }
 
-    transaction = await dao.connect(signer).allVote(index, voteFor, jacdVotes)
+    transaction = await dao.connect(signer).openVote(index, voteFor, jacdVotes)
     await transaction.wait()
 
   } catch (error) {

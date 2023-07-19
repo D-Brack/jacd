@@ -48,15 +48,19 @@ const Info = () => {
   }
 
   return(
-    <CardGroup className='mx-auto mt-4' style={{maxWidth: '1000px'}}>
+    <CardGroup className='mx-auto my-4' style={{maxWidth: '1000px'}}>
       <Card style={{maxWidth: '500px'}}>
         <Card.Header as='h3' >DAO Info</Card.Header>
         <Card.Body>
           <Card.Title as='h4'>Token Info</Card.Title>
           <Card.Text><strong>{symbols[1]} Balance: </strong>{usdcBalance}</Card.Text>
           <Card.Text><strong>Outstanding {symbols[0]} Votes: </strong>{jacdSupply}</Card.Text>
-          <Card.Text><strong>Total Proposals: </strong>{proposals.length}</Card.Text>
-          <Card.Text><strong>Current Proposals: </strong>{holderProposals.length + openProposals.length}</Card.Text>
+          <Card.Text><strong>Total Proposals Submitted: </strong>{proposals.length}</Card.Text>
+          <Card.Text>
+            <strong>Currently Active Proposals: </strong>{holderProposals.length + openProposals.length}<br />
+            <span>Holders only voting stage: {holderProposals.length}<br /></span>
+            <span>Open voting stage: {holderProposals.length}</span>
+          </Card.Text>
 
           <hr />
 

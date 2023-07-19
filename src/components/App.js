@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useDispatch } from 'react-redux'
 import { HashRouter, Routes, Route } from 'react-router-dom'
+import { ethers } from 'ethers'
 
 import Container from 'react-bootstrap/Container'
 import Spinner from 'react-bootstrap/Spinner'
@@ -30,59 +31,83 @@ function App() {
   const dispatch = useDispatch()
 
   const [isLoading, setIsLoading] = useState(true)
+  const [onChain, setOnChain] = useState(true)
 
   const loadBlockchainData = async () => {
     setIsLoading(true)
 
     const provider = await loadProvider(dispatch)
     const chainId = await loadChainId(provider, dispatch)
-    const tokens = await loadTokenContracts(chainId, provider, dispatch)
-    const dao = await loadDAOContract(tokens, chainId, provider, dispatch)
-    const daoBalances = await loadDAOBalances(tokens, dao, dispatch)
-    const proposals = await loadProposals(dao, dispatch)
-    const holderProposals = await loadHolderProposals(proposals, dispatch)
-    const openProposals = await loadOpenProposals(proposals, dispatch)
-    const nfts = await loadNFTContracts(provider, dao, dispatch)
-    const closedProposals = await loadClosedProposals(proposals, dispatch)
+
+    if(chainId === 31337) {
+      setOnChain(true)
+
+      const tokens = await loadTokenContracts(chainId, provider, dispatch)
+      const dao = await loadDAOContract(tokens, chainId, provider, dispatch)
+      const daoBalances = await loadDAOBalances(tokens, dao, dispatch)
+      const proposals = await loadProposals(dao, dispatch)
+      const holderProposals = await loadHolderProposals(proposals, dispatch)
+      const openProposals = await loadOpenProposals(proposals, dispatch)
+      const closedProposals = await loadClosedProposals(proposals, dispatch)
+      const nfts = await loadNFTContracts(provider, dao, dispatch)
+    } else {
+      if(onChain) {
+        setOnChain(false)
+        window.alert('Please connect wallet to Sepolia chain.')
+      }
+    }
 
     setIsLoading(false)
   }
 
   useEffect(() => {
-    if(isLoading) {
-      loadBlockchainData()
-    }
-  }, [isLoading]);
+    console.log('useEffect')
+    loadBlockchainData()
+  }, [])
 
   window.ethereum.on('accountsChanged', async () => {
+    console.log('accountsChanged')
     await loadAccount(dispatch)
+  })
+
+  window.ethereum.on('networkChanged', async () => {
+    console.log('networkChanged')
+    loadBlockchainData()
   })
 
   return (
     <Container>
-      <HashRouter>
-        <Navigation />
+        {onChain ? (
+          <HashRouter>
+            <Navigation />
 
-        <hr />
+            <hr />
 
-        <TabNav />
+            <TabNav />
 
-        {isLoading ? (
+            {isLoading ? (
+              <div className='text-center my-5'>
+                <Spinner animation="grow" />
+                <p className='my-2'>Loading Data...</p>
+              </div>
+            ) : (
+              <Routes>
+                <Route exact path='/' element={<Info />}></Route>
+                <Route path='/create_proposal' element={<CreateProp />}></Route>
+                <Route path='/holder_voting' element={<HolderVote />}></Route>
+                <Route path='/open_voting' element={<OpenVote />}></Route>
+                <Route path='/history' element={<History />}></Route>
+              </Routes>
+            )}
+          </HashRouter>
+        ) : (
           <div className='text-center my-5'>
             <Spinner animation="grow" />
-            <p className='my-2'>Loading Data...</p>
+            <p className='my-2'>Connecting to the blockchain network...</p>
           </div>
-        ) : (
-          <Routes>
-            <Route exact path='/' element={<Info />}></Route>
-            <Route path='/create_proposal' element={<CreateProp />}></Route>
-            <Route path='/holder_voting' element={<HolderVote />}></Route>
-            <Route path='/open_voting' element={<OpenVote />}></Route>
-            <Route path='/history' element={<History />}></Route>
-          </Routes>
         )}
 
-      </HashRouter>
+
     </Container>
   );
 }

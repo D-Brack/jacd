@@ -74,7 +74,7 @@ describe('JACD', () => {
     const collections = [jetpacks.address, hoverboards.address, avas.address]
 
     const JACDDAO = await ethers.getContractFactory('JACD')
-    jacdDAO = await JACDDAO.deploy(jacdToken.address, usdcToken.address, collections, 6, 100, 3, tokens(600))
+    jacdDAO = await JACDDAO.deploy(jacdToken.address, usdcToken.address, collections, 10, 100, 6, 3, tokens(600), 604800, 1209600)
 
     transaction = await jacdToken.connect(deployer).transferOwnership(jacdDAO.address)
     await transaction.wait()
@@ -147,7 +147,7 @@ describe('JACD', () => {
         transaction = await avas.connect(holder).mint(1, { value: ether(.01) })
         await transaction.wait()
 
-        transaction = await jacdDAO.connect(holder).createProposal(rando.address, tokens(10), 'Prop 1')
+        transaction = await jacdDAO.connect(holder).createProposal(rando.address, tokens(10), 'Prop 1', 'Description of Prop 1')
         await transaction.wait()
       })
 
@@ -158,7 +158,8 @@ describe('JACD', () => {
         expect(proposal.index).to.equal(1)
         expect(proposal.recipient).to.equal(rando.address)
         expect(proposal.amount).to.equal(tokens(10))
-        expect(proposal.description).to.equal('Prop 1')
+        expect(proposal.name).to.equal('Prop 1')
+        expect(proposal.description).to.equal('Description of Prop 1')
         expect(proposal.votesFor).to.equal(0)
         expect(proposal.votesAgainst).to.equal(0)
         expect(proposal.stage).to.equal(0)
@@ -174,6 +175,7 @@ describe('JACD', () => {
           rando.address,
           tokens(10),
           'Prop 1',
+          'Description of Prop 1',
           holder.address,
           (await ethers.provider.getBlock(await ethers.provider.getBlockNumber())).timestamp
         )
@@ -193,7 +195,8 @@ describe('JACD', () => {
         await expect(jacdDAO.connect(rando).createProposal(
           deployer.address,
           tokens(10),
-          'Prop 1'
+          'Prop 1',
+          'Description of Prop 1'
         ))
           .to.be.revertedWith('JACD: not a holder or an contributor')
       })
@@ -202,24 +205,37 @@ describe('JACD', () => {
         await expect(jacdDAO.connect(holder).createProposal(
           holder.address,
           0,
-          'Prop 1'
+          'Prop 1',
+          'Description of Prop 1'
         ))
           .to.be.revertedWith('JACD: proposal amount of 0')
       })
 
-      it('rejects proposals with amounts of over 10% of USDC balance', async () => {
+      it('rejects proposals with amounts of over % limit', async () => {
         await expect(jacdDAO.connect(holder).createProposal(
           holder.address,
           tokens(10.01),
-          'Prop 1'
+          'Prop 1',
+          'Description of Prop 1'
         ))
-          .to.be.revertedWith('JACD: proposal exceeds 10% limit')
+          .to.be.revertedWith('JACD: proposal exceeds limit')
+      })
+
+      it('rejects proposals with no name', async () => {
+        await expect(jacdDAO.connect(holder).createProposal(
+          holder.address,
+          tokens(10),
+          '',
+          'Description of Prop 1'
+        ))
+          .to.be.revertedWith('JACD: no proposal name')
       })
 
       it('rejects proposals with no descritpion', async () => {
         await expect(jacdDAO.connect(holder).createProposal(
           holder.address,
           tokens(10),
+          'Prop 1',
           ''
         ))
           .to.be.revertedWith('JACD: no proposal description')
@@ -229,7 +245,8 @@ describe('JACD', () => {
         await expect(jacdDAO.connect(holder).createProposal(
           '0x0000000000000000000000000000000000000000',
           tokens(10),
-          'Prop 1'
+          'Prop 1',
+          'Description of Prop 1'
         ))
           .to.be.revertedWith('JACD: invalid proposal recipient address')
       })
@@ -256,7 +273,7 @@ describe('JACD', () => {
       transaction = await avas.connect(holder).mint(3, { value: ether(.03) })
       await transaction.wait()
 
-      transaction = await jacdDAO.connect(deployer).createProposal(rando.address, tokens(10), 'Prop 1')
+      transaction = await jacdDAO.connect(deployer).createProposal(rando.address, tokens(10), 'Prop 1', 'Description of Prop 1')
       await transaction.wait()
 
     })
@@ -352,7 +369,7 @@ describe('JACD', () => {
     describe('Success', () => {
       describe('Passing Proposals', () => {
         beforeEach(async () => {
-          transaction = await jacdDAO.connect(deployer).createProposal(rando.address, tokens(10), 'Prop 1')
+          transaction = await jacdDAO.connect(deployer).createProposal(rando.address, tokens(10), 'Prop 1', 'Description of Prop 1')
           await transaction.wait()
         })
 
@@ -409,7 +426,7 @@ describe('JACD', () => {
 
       describe('Failing Proposals', () => {
         it('fails a proposal with less than 50% holder votes', async () => {
-          transaction = await jacdDAO.connect(deployer).createProposal(rando.address, tokens(.1), 'Prop 1')
+          transaction = await jacdDAO.connect(deployer).createProposal(rando.address, tokens(.1), 'Prop 1', 'Description of Prop 1')
           await transaction.wait()
 
           transaction = await jacdDAO.connect(deployer).holdersVote(1, true)
@@ -425,7 +442,7 @@ describe('JACD', () => {
         })
 
         it('fails a proposal with majority down votes', async () => {
-          transaction = await jacdDAO.connect(deployer).createProposal(rando.address, tokens(.1), 'Prop 1')
+          transaction = await jacdDAO.connect(deployer).createProposal(rando.address, tokens(.1), 'Prop 1', 'Description of Prop 1')
           await transaction.wait()
 
           transaction = await jacdDAO.connect(holder).holdersVote(1, false)
@@ -444,7 +461,7 @@ describe('JACD', () => {
 
     describe('Failure', () => {
       beforeEach(async () => {
-        transaction = await jacdDAO.connect(deployer).createProposal(rando.address, tokens(.1), 'Prop 1')
+        transaction = await jacdDAO.connect(deployer).createProposal(rando.address, tokens(.1), 'Prop 1', 'Description of Prop 1')
         await transaction.wait()
       })
 
@@ -457,7 +474,7 @@ describe('JACD', () => {
       })
 
       it('rejects finalization of proposals not in holders stage', async () => {
-        transaction = await jacdDAO.connect(deployer).createProposal(rando.address, tokens(.1), 'Prop 1')
+        transaction = await jacdDAO.connect(deployer).createProposal(rando.address, tokens(.1), 'Prop 1', 'Description of Prop 1')
         await transaction.wait()
 
         transaction = await jacdDAO.connect(holder).holdersVote(1, true)
@@ -475,7 +492,7 @@ describe('JACD', () => {
     })
   })
 
-  describe('All Voting', () => {
+  describe('Open Voting', () => {
     beforeEach(async () => {
       transaction = await jetpacks.connect(deployer).addToWhitelist(holder.address)
       await transaction.wait()
@@ -495,7 +512,7 @@ describe('JACD', () => {
       transaction = await avas.connect(holder).mint(3, { value: ether(.03) })
       await transaction.wait()
 
-      transaction = await jacdDAO.connect(deployer).createProposal(rando.address, tokens(10), 'Prop 1')
+      transaction = await jacdDAO.connect(deployer).createProposal(rando.address, tokens(10), 'Prop 1', 'Description of Prop 1')
       await transaction.wait()
 
       transaction = await jacdDAO.connect(holder).holdersVote(1, true)
@@ -525,13 +542,13 @@ describe('JACD', () => {
 
     describe('Success', () => {
       beforeEach(async () => {
-        transaction = await jacdDAO.connect(holder).allVote(1, true, 0)
+        transaction = await jacdDAO.connect(holder).openVote(1, true, 0)
         await transaction.wait()
 
-        transaction = await jacdDAO.connect(deployer).allVote(1, false, 0)
+        transaction = await jacdDAO.connect(deployer).openVote(1, false, 0)
         await transaction.wait()
 
-        transaction = await jacdDAO.connect(contributor).allVote(1, true, votes(1))
+        transaction = await jacdDAO.connect(contributor).openVote(1, true, votes(1))
         await transaction.wait()
       })
 
@@ -543,7 +560,7 @@ describe('JACD', () => {
       })
 
       it('updates a holders voting status', async () => {
-        expect(await jacdDAO.holderAllVoted(1, holder.address)).to.equal(true)
+        expect(await jacdDAO.holderOpenVoted(1, holder.address)).to.equal(true)
       })
 
       it('allows holder to submit second jacd tokens only vote', async () => {
@@ -559,9 +576,9 @@ describe('JACD', () => {
         transaction = await jacdToken.connect(holder).approve(jacdDAO.address, tokens(1))
         await transaction.wait()
 
-        expect(await jacdDAO.holderAllVoted(1, holder.address)).to.equal(true)
+        expect(await jacdDAO.holderOpenVoted(1, holder.address)).to.equal(true)
 
-        transaction = await jacdDAO.connect(holder).allVote(1, true, votes(1))
+        transaction = await jacdDAO.connect(holder).openVote(1, true, votes(1))
         await transaction.wait()
 
         let proposal = await jacdDAO.proposals(1)
@@ -588,15 +605,15 @@ describe('JACD', () => {
 
     describe('Failure', () => {
       it('rejects votes from non-holders/non-contributors', async () => {
-        await expect(jacdDAO.connect(rando).allVote(1, true, 0))
+        await expect(jacdDAO.connect(rando).openVote(1, true, 0))
           .to.be.rejectedWith('JACD: not a holder or an contributor')
       })
 
       it('prevents holders voting twice/votes with 0 JACD tokens', async () => {
-        transaction = await jacdDAO.connect(holder).allVote(1, true, 0)
+        transaction = await jacdDAO.connect(holder).openVote(1, true, 0)
         await transaction.wait()
 
-        await expect(jacdDAO.connect(holder).allVote(1, true, votes(1)))
+        await expect(jacdDAO.connect(holder).openVote(1, true, votes(1)))
           .to.be.rejectedWith('JACD: no votes/already voted')
       })
 
@@ -604,14 +621,14 @@ describe('JACD', () => {
         transaction = await jacdToken.connect(contributor).approve(jacdDAO.address, votes(1000))
         await transaction.wait()
 
-        await expect(jacdDAO.connect(contributor).allVote(1, true, votes(101.01)))
+        await expect(jacdDAO.connect(contributor).openVote(1, true, votes(101.01)))
           .to.be.revertedWith('JACD: insufficient JACD token votes')
       })
 
       it('rejects voting after time expired', async () => {
         time.increase(1209601)
 
-        await expect(jacdDAO.connect(holder).allVote(1, true, 0))
+        await expect(jacdDAO.connect(holder).openVote(1, true, 0))
           .to.be.revertedWith('JACD: voting time expired')
       })
     })
@@ -637,7 +654,7 @@ describe('JACD', () => {
       transaction = await avas.connect(deployer).mint(3, { value: ether(.03) })
       await transaction.wait()
 
-      transaction = await jacdDAO.connect(deployer).createProposal(rando.address, tokens(10), 'Prop 1')
+      transaction = await jacdDAO.connect(deployer).createProposal(rando.address, tokens(10), 'Prop 1', 'Description of Prop 1')
       await transaction.wait()
 
       transaction = await jacdDAO.connect(holder).holdersVote(1, true)
@@ -665,13 +682,13 @@ describe('JACD', () => {
     describe('Success', () => {
       describe('Passing Proposals', () => {
         beforeEach(async () => {
-          transaction = await jacdDAO.connect(holder).allVote(1, true, 0)
+          transaction = await jacdDAO.connect(holder).openVote(1, true, 0)
           await transaction.wait()
 
-          transaction = await jacdDAO.connect(deployer).allVote(1, false, 0)
+          transaction = await jacdDAO.connect(deployer).openVote(1, false, 0)
           await transaction.wait()
 
-          transaction = await jacdDAO.connect(contributor).allVote(1, true, tokens(1))
+          transaction = await jacdDAO.connect(contributor).openVote(1, true, tokens(1))
           await transaction.wait()
 
           time.increase(1209601)
@@ -709,7 +726,7 @@ describe('JACD', () => {
 
       describe('Failing Proposals', () => {
         it('fails a proposal with not enough votes', async () => {
-          transaction = await jacdDAO.connect(holder).allVote(1, true, 0)
+          transaction = await jacdDAO.connect(holder).openVote(1, true, 0)
           await transaction.wait()
 
           time.increase(1209601)
@@ -723,13 +740,13 @@ describe('JACD', () => {
         })
 
         it('fails a proposal with a majority down votes', async () => {
-          transaction = await jacdDAO.connect(holder).allVote(1, false, 0)
+          transaction = await jacdDAO.connect(holder).openVote(1, false, 0)
           await transaction.wait()
 
-          transaction = await jacdDAO.connect(deployer).allVote(1, true, 0)
+          transaction = await jacdDAO.connect(deployer).openVote(1, true, 0)
           await transaction.wait()
 
-          transaction = await jacdDAO.connect(contributor).allVote(1, false, tokens(1))
+          transaction = await jacdDAO.connect(contributor).openVote(1, false, tokens(1))
           await transaction.wait()
 
           time.increase(1209601)
@@ -746,13 +763,13 @@ describe('JACD', () => {
 
     describe('Failure', () => {
       beforeEach(async () => {
-        transaction = await jacdDAO.connect(holder).allVote(1, true, 0)
+        transaction = await jacdDAO.connect(holder).openVote(1, true, 0)
         await transaction.wait()
 
-        transaction = await jacdDAO.connect(deployer).allVote(1, false, 0)
+        transaction = await jacdDAO.connect(deployer).openVote(1, false, 0)
         await transaction.wait()
 
-        transaction = await jacdDAO.connect(contributor).allVote(1, true, tokens(1))
+        transaction = await jacdDAO.connect(contributor).openVote(1, true, tokens(1))
         await transaction.wait()
       })
 
@@ -763,7 +780,7 @@ describe('JACD', () => {
 
       it('prevents finalization for insufficient USDC balance', async () => {
         for(i = 2; i < 12; i++) {
-          transaction = await jacdDAO.connect(deployer).createProposal(rando.address, tokens(10), 'Prop 1')
+          transaction = await jacdDAO.connect(deployer).createProposal(rando.address, tokens(10), 'Prop 1', 'Description of Prop 1')
           await transaction.wait()
 
           transaction = await jacdDAO.connect(holder).holdersVote(i, true)
@@ -775,10 +792,10 @@ describe('JACD', () => {
           transaction = await jacdDAO.connect(holder).finalizeHoldersVote(i)
           await transaction.wait()
 
-          transaction = await jacdDAO.connect(holder).allVote(i, true, 0)
+          transaction = await jacdDAO.connect(holder).openVote(i, true, 0)
           await transaction.wait()
 
-          transaction = await jacdDAO.connect(deployer).allVote(i, true, 0)
+          transaction = await jacdDAO.connect(deployer).openVote(i, true, 0)
           await transaction.wait()
         }
 

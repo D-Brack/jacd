@@ -87,11 +87,11 @@ async function main() {
 
   console.log('creating proposals...')
 
-  transaction = await dao.connect(deployer).createProposal(deployer.address, tokens(100), 'Proposal 1')
+  transaction = await dao.connect(deployer).createProposal(deployer.address, tokens(100), 'Proposal 1', 'Description of Proposal 1')
   await transaction.wait()
-  transaction = await dao.connect(deployer).createProposal(deployer.address, tokens(100), 'Proposal 2')
+  transaction = await dao.connect(deployer).createProposal(deployer.address, tokens(100), 'Proposal 2', 'Description of Proposal 2')
   await transaction.wait()
-  transaction = await dao.connect(contributor1).createProposal(deployer.address, tokens(100), 'Proposal 3')
+  transaction = await dao.connect(contributor1).createProposal(deployer.address, tokens(100), 'Proposal 3', 'Description of Proposal 3')
   await transaction.wait()
 
   console.log('holder voting...')
@@ -125,7 +125,7 @@ async function main() {
   transaction = await jacdToken.connect(contributor1).approve(dao.address, tokens(300))
   await transaction.wait()
 
-  transaction = await dao.connect(contributor1).allVote(1, true, votes(300))
+  transaction = await dao.connect(contributor1).openVote(1, true, votes(300))
   await transaction.wait()
 
   console.log('finished!')

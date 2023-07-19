@@ -44,11 +44,11 @@ const OpenVote = () => {
   const balances = useSelector((state) => state.tokens.balances)
   const nftBalances = useSelector((state) => state.nfts.nftBalances)
   const dao = useSelector((state) => state.dao.contract)
+  const holdersWeight = useSelector((state) => state.dao.holdersWeight)
   const totalHolderVotes = useSelector((state) => state.dao.holderVotes)
   const votesToFinalize = useSelector((state) => state.dao.minVotesToFinalize)
   const openProposals = useSelector((state) => state.dao.openProposals)
   const holderOpenVoteStatus = useSelector((state) => state.dao.holderOpenVoteStatus)
-  const holdersWeight = useSelector((state) => state.dao.holdersWeight)
 /* #endregion */
 
 /* #region Component Functions */
@@ -147,61 +147,59 @@ const OpenVote = () => {
       <Card className='my-4'>
         <Card.Header as='h3' >Open Voting Proposals</Card.Header>
         {account ? (
-          isDAOMember ? (
-            <Card.Body>
-              <Table striped bordered hover >
-                <thead>
-                  <tr>
-                    <th>#</th>
-                    <th>Description</th>
-                    <th>Recipient</th>
-                    <th>Amount</th>
-                    <th>Votes For</th>
-                    <th>Votes Against</th>
-                    <th>Actions</th>
-                    <th>Time Remaining</th>
-                  </tr>
-                </thead>
-                {openProposals.length === 0 ? (
-                  <tbody>
-                  <tr>
-                    <td colSpan='8' style={{textAlign: 'center'}}>No proposals currently in open voting phase</td>
-                  </tr>
-                  </tbody>
-                ) : (
-                  <tbody>
-                    {openProposals.map((proposal, index) => (
-                      <tr key={index}>
-                        <td>{proposal.index.toString()}</td>
-                        <td>{proposal.description}</td>
-                        <td>{`${proposal.recipient.slice(0, 6)}...${proposal.recipient.slice(-4)}`}</td>
-                        <td>{ethers.utils.formatUnits(proposal.amount.toString(), 'ether')} {symbols[1]}</td>
-                        <td>{ethers.utils.formatUnits(proposal.votesFor.toString(), 'ether')}</td>
-                        <td>{ethers.utils.formatUnits(proposal.votesAgainst.toString())}</td>
-                        <td>
-                          {votingClosed[index] ? (
+          <Card.Body>
+            <Table striped bordered hover >
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Description</th>
+                  <th>Recipient</th>
+                  <th>Amount</th>
+                  <th>Votes For</th>
+                  <th>Votes Against</th>
+                  <th>Actions</th>
+                  <th>Time Remaining</th>
+                </tr>
+              </thead>
+              {openProposals.length === 0 ? (
+                <tbody>
+                <tr>
+                  <td colSpan='8' style={{textAlign: 'center'}}>No proposals currently in open voting phase</td>
+                </tr>
+                </tbody>
+              ) : (
+                <tbody>
+                  {openProposals.map((proposal, index) => (
+                    <tr key={index}>
+                      <td>{proposal.index.toString()}</td>
+                      <td>{proposal.description}</td>
+                      <td>{`${proposal.recipient.slice(0, 6)}...${proposal.recipient.slice(-4)}`}</td>
+                      <td>{ethers.utils.formatUnits(proposal.amount.toString(), 'ether')} {symbols[1]}</td>
+                      <td>{ethers.utils.formatUnits(proposal.votesFor.toString(), 'ether')}</td>
+                      <td>{ethers.utils.formatUnits(proposal.votesAgainst.toString())}</td>
+                      <td>
+                        {isDAOMember && (
+                          votingClosed[index] ? (
                             <Button value={proposal.index} onClick={finalizeHandler}>Finalize</Button>
                           ) : (
                             (isHolder && holderOpenVoteStatus[index]) && +balances[0] === 0 ? (
                               <p>No votes remaining</p>
                             ) : (
-                            <div>
-                              <Button value={[proposal.index, index]} onClick={voteForHandler}>Vote For</Button>
-                              <Button className='mx-3' value={[proposal.index, index]} onClick={voteAgainstHandler} >Vote Against</Button>
-                              {holderOpenVoteStatus[index] ? <span>(holder votes submitted)</span> : ''}
-                            </div>
-                          ))}
-                        </td>
-                        <td><Countdown date={(proposal.voteEnd * 1000) + 1000} onComplete={buildVotingClosed} /></td>
-                      </tr>
-                    ))}
-                  </tbody>
-                )}
-              </Table>
-            </Card.Body>
-          ) : (
-            <Card.Body>Purchase an NFT or donate to the DAO to participate in open voting</Card.Body>
-          )
+                              <div>
+                                <Button value={[proposal.index, index]} onClick={voteForHandler}>Vote For</Button>
+                                <Button className='mx-3' value={[proposal.index, index]} onClick={voteAgainstHandler} >Vote Against</Button>
+                                {holderOpenVoteStatus[index] ? <span>(holder votes submitted)</span> : ''}
+                              </div>
+                        )))}
+                      </td>
+                      <td><Countdown date={(proposal.voteEnd * 1000) + 1000} onComplete={buildVotingClosed} /></td>
+                    </tr>
+                  ))}
+                </tbody>
+              )}
+            </Table>
+            {!isDAOMember && <p style={{color: 'red'}}>Purchase a NFT or donate to DAO to participate in open voting.</p>}
+          </Card.Body>
         ) : (
           <Card.Body>Please connect your wallet</Card.Body>
         )}

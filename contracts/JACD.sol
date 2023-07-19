@@ -10,10 +10,13 @@ contract JACD {
     JACDToken public jacdToken;
     IERC20 public usdcToken;
 
+    uint8 public maxProposalAmountPercent;
     uint256 public holdersWeight;
     uint256 public holderVotes;
     uint256 public minHolderVotesToPass;
     uint256 public minVotesToFinalize;
+    uint256 public holderVoteTime;
+    uint256 public openVoteTime;
 
     IERC721Enumerable[] public collections;
 
@@ -24,14 +27,15 @@ contract JACD {
     mapping(uint256 => Proposal) public proposals;
 
     mapping(uint256 => mapping(address => bool)) public holderVoted;
-    mapping(uint256 => mapping(address => bool)) public holderAllVoted;
+    mapping(uint256 => mapping(address => bool)) public holderOpenVoted;
 
-    enum VoteStage {Holder, All, Finalized, Failed}
+    enum VoteStage {Holder, Open, Finalized, Failed}
 
     struct Proposal {
         uint256 index;
         address recipient;
         uint256 amount;
+        string name;
         string description;
         uint256 votesFor;
         uint256 votesAgainst;
@@ -49,6 +53,7 @@ contract JACD {
         uint256 index,
         address recipient,
         uint256 amount,
+        string name,
         string description,
         address creator,
         uint256 timestamp
@@ -116,19 +121,25 @@ contract JACD {
         JACDToken _jacdToken,
         IERC20 _usdcToken,
         IERC721Enumerable[] memory _collections,
-        uint256 _holderVotes,
+        uint8 _maxProposalAmountPercent,
         uint256 _holdersWeight,
+        uint256 _holderVotes,
         uint256 _minHolderVotesToPass,
-        uint256 _minVotesToFinalize
+        uint256 _minVotesToFinalize,
+        uint256 _holderVoteTime,
+        uint256 _openVoteTime
     )
     {
         jacdToken = _jacdToken;
         usdcToken = _usdcToken;
         collections = _collections;
-        holderVotes = _holderVotes;
+        maxProposalAmountPercent = _maxProposalAmountPercent;
         holdersWeight = _holdersWeight;
+        holderVotes = _holderVotes;
         minHolderVotesToPass = _minHolderVotesToPass;
         minVotesToFinalize = _minVotesToFinalize;
+        holderVoteTime = _holderVoteTime;
+        openVoteTime = _openVoteTime;
     }
 
     function getCollections() public view returns (IERC721Enumerable[] memory) {
@@ -167,13 +178,17 @@ contract JACD {
     function createProposal(
         address _recipient,
         uint256 _amount,
+        string memory _name,
         string memory _description
     )
         public
         holdersOrContributors
     {
+        uint256 maxAmount = (maxProposalAmountPercent * usdcBalance) / 100;
+
         require(_amount > 0, 'JACD: proposal amount of 0');
-        require(_amount <= usdcBalance / 10, 'JACD: proposal exceeds 10% limit');
+        require(_amount <= maxAmount, 'JACD: proposal exceeds limit');
+        require(bytes(_name).length > 0, 'JACD: no proposal name');
         require(bytes(_description).length > 0, 'JACD: no proposal description');
         require(_recipient != address(0), 'JACD: invalid proposal recipient address');
 
@@ -183,17 +198,19 @@ contract JACD {
         proposal.index = proposalCount;
         proposal.recipient = _recipient;
         proposal.amount = _amount;
+        proposal.name = _name;
         proposal.description = _description;
         proposal.votesFor = 0;
         proposal.votesAgainst = 0;
         proposal.stage = VoteStage.Holder;
-        proposal.voteEnd = block.timestamp + 60;
+        proposal.voteEnd = block.timestamp + holderVoteTime;
 
         proposals[proposalCount] = proposal;
 
         emit Propose(proposalCount,
             _recipient,
             _amount,
+            _name,
             _description,
             msg.sender,
             block.timestamp
@@ -248,21 +265,21 @@ contract JACD {
                 proposal.votesAgainst
             );
 
-            proposal.stage = VoteStage.All;
+            proposal.stage = VoteStage.Open;
             proposal.votesFor = 0;
             proposal.votesAgainst = 0;
-            proposal.voteEnd = block.timestamp + 120;
+            proposal.voteEnd = block.timestamp + openVoteTime;
         } else {
             proposal.stage = VoteStage.Failed;
         }
     }
 
-    function allVote(uint256 _index, bool _voteFor, uint256 _tokenVotes) public holdersOrContributors {
+    function openVote(uint256 _index, bool _voteFor, uint256 _tokenVotes) public holdersOrContributors {
         Proposal storage proposal = proposals[_index];
 
-        require(proposal.stage == VoteStage.All, 'JACD: not in "all" voting stage ');
+        require(proposal.stage == VoteStage.Open, 'JACD: not in "open" voting stage ');
         require(
-            (!holderAllVoted[_index][msg.sender]) ||
+            (!holderOpenVoted[_index][msg.sender]) ||
             jacdToken.balanceOf(msg.sender) > 0,
             'JACD: no votes/already voted'
         );
@@ -271,7 +288,7 @@ contract JACD {
 
         uint256 allVotes = _tokenVotes;
 
-        if(!holderAllVoted[_index][msg.sender]) {
+        if(!holderOpenVoted[_index][msg.sender]) {
             for(uint256 i; i < collections.length; i++) {
                 allVotes += collections[i].balanceOf(msg.sender) * (holdersWeight * 1e18);
             }
@@ -284,7 +301,7 @@ contract JACD {
         }
 
         if (allVotes > _tokenVotes) {
-            holderAllVoted[_index][msg.sender] = true;
+            holderOpenVoted[_index][msg.sender] = true;
         }
 
         if(_tokenVotes > 0) {
@@ -321,6 +338,42 @@ contract JACD {
         } else {
             proposal.stage = VoteStage.Failed;
         }
+    }
 
+    function setMaxProposalAmountPercent(uint8 _percent) private {
+        require(_percent > 0, 'JACD: new max prop amt percent 0');
+        require(_percent <= 100, 'JACD: new max prop amt percent > 100');
+
+        maxProposalAmountPercent = _percent;
+    }
+
+    function setHoldersWeight(uint256 _weight) private {
+        require(_weight > 0, 'JACD: new vote weight 0');
+
+        holdersWeight = _weight;
+    }
+
+    function setMinHolderVotesToPass(uint256 _minHolderVotes) private {
+        require(_minHolderVotes > 0, 'JACD: new minimum holder votes 0');
+
+        minHolderVotesToPass = _minHolderVotes;
+    }
+
+    function setMinVotesToFinalize(uint256 _minVotes) private {
+        require(_minVotes > 0, 'JACD: new minimum votes 0');
+
+        minHolderVotesToPass = _minVotes;
+    }
+
+    function setHolderVoteTime(uint256 _time) private {
+        require(_time > 0, 'JACD: new holder vote time 0');
+
+        holderVoteTime = _time;
+    }
+
+    function setOpenVoteTime(uint256 _time) private {
+        require(_time > 0, 'JACD: new open vote time 0');
+
+        openVoteTime = _time;
     }
 }

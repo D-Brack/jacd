@@ -23,7 +23,6 @@ const Navigation = () => {
 
   const connectHandler = async () => {
     let address = await loadAccount(dispatch)
-    console.log(address)
     await loadUserBalances(tokens, address, dispatch)
     await loadNFTBalances(nfts, address, dispatch)
     await loadHolderVoteStatus(dao, holderProposals, address, dispatch)

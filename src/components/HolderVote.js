@@ -96,39 +96,39 @@ const HolderVote = () => {
     <Card className='my-4'>
       <Card.Header as='h3' >Holding Voting Proposals</Card.Header>
       {account ? (
-        isNFTHolder ? (
-          <Card.Body>
-            <Table striped bordered hover >
-              <thead>
-                <tr>
-                  <th>#</th>
-                  <th>Description</th>
-                  <th>Recipient</th>
-                  <th>Amount</th>
-                  <th>Votes For</th>
-                  <th>Votes Against</th>
-                  <th>Actions</th>
-                  <th>Time Remaining</th>
-                </tr>
-              </thead>
-              {holderProposals.length === 0 ? (
-                <tbody>
-                <tr>
-                  <td colSpan='8' style={{textAlign: 'center'}}>No proposals currently in holder voting phase</td>
-                </tr>
-                </tbody>
-              ) : (
-                <tbody>
-                  {holderProposals.map((proposal, index) => (
-                    <tr key={index}>
-                      <td>{proposal.index.toString()}</td>
-                      <td>{proposal.description}</td>
-                      <td>{`${proposal.recipient.slice(0, 6)}...${proposal.recipient.slice(-4)}`}</td>
-                      <td>{ethers.utils.formatUnits(proposal.amount.toString(), 'ether')} {symbols[1]}</td>
-                      <td>{proposal.votesFor.toString()}</td>
-                      <td>{proposal.votesAgainst.toString()}</td>
-                      <td>
-                        {(+(proposal.votesFor.toString()) + +(proposal.votesAgainst.toString())) === +holderVotes || votingClosed ? (
+        <Card.Body>
+          <Table striped bordered hover >
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Description</th>
+                <th>Recipient</th>
+                <th>Amount</th>
+                <th>Votes For</th>
+                <th>Votes Against</th>
+                <th>Actions</th>
+                <th>Time Remaining</th>
+              </tr>
+            </thead>
+            {holderProposals.length === 0 ? (
+              <tbody>
+              <tr>
+                <td colSpan='8' style={{textAlign: 'center'}}>No proposals currently in holder voting phase</td>
+              </tr>
+              </tbody>
+            ) : (
+              <tbody>
+                {holderProposals.map((proposal, index) => (
+                  <tr key={index}>
+                    <td>{proposal.index.toString()}</td>
+                    <td>{proposal.description}</td>
+                    <td>{`${proposal.recipient.slice(0, 6)}...${proposal.recipient.slice(-4)}`}</td>
+                    <td>{ethers.utils.formatUnits(proposal.amount.toString(), 'ether')} {symbols[1]}</td>
+                    <td>{proposal.votesFor.toString()}</td>
+                    <td>{proposal.votesAgainst.toString()}</td>
+                    <td>
+                      {isNFTHolder && (
+                        (+(proposal.votesFor.toString()) + +(proposal.votesAgainst.toString())) === +holderVotes || votingClosed ? (
                           <Button value={proposal.index} onClick={finalizeHandler}>Finalize</Button>
                         ) : (
                           <div>
@@ -139,20 +139,19 @@ const HolderVote = () => {
                                 <Button value={[proposal.index]} onClick={voteForHandler}>Vote For</Button>
                                 <Button className='mx-3' value={[proposal.index]} onClick={voteAgainstHandler} >Vote Against</Button>
                               </>
-                            )}
+                              )
+                            }
                           </div>
-                        )}
-                      </td>
-                      <td><Countdown date={(proposal.voteEnd * 1000) + 1000} onComplete={buildVotingClosed} /></td>
-                    </tr>
-                  ))}
-                </tbody>
-              )}
-            </Table>
-          </Card.Body>
-        ) : (
-          <Card.Body>Purchase an NFT to participate in holders voting</Card.Body>
-        )
+                      ))}
+                    </td>
+                    <td><Countdown date={(proposal.voteEnd * 1000) + 1000} onComplete={buildVotingClosed} /></td>
+                  </tr>
+                ))}
+              </tbody>
+            )}
+          </Table>
+          {!isNFTHolder && <p style={{color: 'red'}}>Purchase a NFT to participate in holder voting.</p>}
+        </Card.Body>
       ) : (
         <Card.Body>Please connect wallet</Card.Body>
       )}

@@ -1,4 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
+import { act } from "react-dom/test-utils";
 
 export const dao = createSlice({
   name: 'dao',
@@ -6,13 +7,14 @@ export const dao = createSlice({
     contract: null,
     usdcBalance: 0,
     jacdSupply: 0,
+    maxProposalAmountPercent: 0,
+    holdersWeight: 0,
     holderVotes: 0,
     minHolderVotesToPass: 0,
     minVotesToFinalize: 0,
     proposals: [],
     holderProposals: [],
     holderVoteStatus: [],
-    holdersWeight: 0,
     openProposals: [],
     holderOpenVoteStatus: [],
     closedProposals: [],
@@ -26,6 +28,12 @@ export const dao = createSlice({
     },
     setJACDSupply: (state, action) => {
       state.jacdSupply = action.payload
+    },
+    setMaxProposalAmountPercent: (state, action) => {
+      state.maxProposalAmountPercent = action.payload
+    },
+    setHoldersWeight: (state, action) => {
+      state.holdersWeight = action.payload
     },
     setHolderVotes: (state, action) => {
       state.holderVotes = action.payload
@@ -45,9 +53,6 @@ export const dao = createSlice({
     setHolderVoteStatus: (state, action) => {
       state.holderVoteStatus = action.payload
     },
-    setHoldersWeight: (state, action) => {
-      state.holdersWeight = action.payload
-    },
     setOpenProposals: (state, action) => {
       state.openProposals = action.payload
     },
@@ -64,13 +69,14 @@ export const {
   setContract,
   setUSDCBalance,
   setJACDSupply,
+  setMaxProposalAmountPercent,
+  setHoldersWeight,
   setHolderVotes,
   setMinHolderVotesToPass,
   setMinVotesToFinalize,
   setProposals,
   setHolderProposals,
   setHolderVoteStatus,
-  setHoldersWeight,
   setOpenProposals,
   setHolderOpenVoteStatus,
   setClosedProposals

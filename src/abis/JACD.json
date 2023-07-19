@@ -17,13 +17,18 @@
         "type": "address[]"
       },
       {
-        "internalType": "uint256",
-        "name": "_holderVotes",
-        "type": "uint256"
+        "internalType": "uint8",
+        "name": "_maxProposalAmountPercent",
+        "type": "uint8"
       },
       {
         "internalType": "uint256",
         "name": "_holdersWeight",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_holderVotes",
         "type": "uint256"
       },
       {
@@ -34,6 +39,16 @@
       {
         "internalType": "uint256",
         "name": "_minVotesToFinalize",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_holderVoteTime",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_openVoteTime",
         "type": "uint256"
       }
     ],
@@ -85,6 +100,12 @@
         "internalType": "uint256",
         "name": "amount",
         "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "string",
+        "name": "name",
+        "type": "string"
       },
       {
         "indexed": false,
@@ -186,29 +207,6 @@
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "_index",
-        "type": "uint256"
-      },
-      {
-        "internalType": "bool",
-        "name": "_voteFor",
-        "type": "bool"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_tokenVotes",
-        "type": "uint256"
-      }
-    ],
-    "name": "allVote",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
         "name": "",
         "type": "uint256"
       }
@@ -248,6 +246,11 @@
         "internalType": "uint256",
         "name": "_amount",
         "type": "uint256"
+      },
+      {
+        "internalType": "string",
+        "name": "_name",
+        "type": "string"
       },
       {
         "internalType": "string",
@@ -312,12 +315,25 @@
         "type": "address"
       }
     ],
-    "name": "holderAllVoted",
+    "name": "holderOpenVoted",
     "outputs": [
       {
         "internalType": "bool",
         "name": "",
         "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "holderVoteTime",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
       }
     ],
     "stateMutability": "view",
@@ -419,6 +435,19 @@
   },
   {
     "inputs": [],
+    "name": "maxProposalAmountPercent",
+    "outputs": [
+      {
+        "internalType": "uint8",
+        "name": "",
+        "type": "uint8"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "minHolderVotesToPass",
     "outputs": [
       {
@@ -433,6 +462,42 @@
   {
     "inputs": [],
     "name": "minVotesToFinalize",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_index",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bool",
+        "name": "_voteFor",
+        "type": "bool"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_tokenVotes",
+        "type": "uint256"
+      }
+    ],
+    "name": "openVote",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "openVoteTime",
     "outputs": [
       {
         "internalType": "uint256",
@@ -480,6 +545,11 @@
         "internalType": "uint256",
         "name": "amount",
         "type": "uint256"
+      },
+      {
+        "internalType": "string",
+        "name": "name",
+        "type": "string"
       },
       {
         "internalType": "string",
