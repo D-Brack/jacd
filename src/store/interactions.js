@@ -310,7 +310,7 @@ export const submitOpenVote = async (provider, dao, tokens, index, voteFor, jacd
   }
 }
 
-export const finalizeProposal = async (provider, dao, index) => {
+export const finalizeProposal = async (provider, chainId, dao, index) => {
   try {
     let transaction
 
@@ -321,6 +321,22 @@ export const finalizeProposal = async (provider, dao, index) => {
 
   } catch (error) {
     window.alert('Proposal failed to finalize')
+  }
+}
+
+export const faucetRequest = async (provider, chainId, dao) => {
+  try {
+    let transaction
+
+    const amount = ethers.utils.parseUnits('100', 'ether')
+
+    const signer = provider.getSigner()
+
+    transaction = await dao.connect(signer).faucetRequest(config[chainId].deployer.address, amount)
+    await transaction.wait()
+
+  } catch (error) {
+    window.alert('Unable to complete faucet request')
   }
 }
 /* #endregion */

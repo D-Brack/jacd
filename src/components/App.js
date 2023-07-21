@@ -26,6 +26,7 @@ import {
   loadNFTContracts,
   loadClosedProposals
 } from '../store/interactions'
+import Faucet from './Faucet'
 
 function App() {
   const dispatch = useDispatch()
@@ -61,17 +62,14 @@ function App() {
   }
 
   useEffect(() => {
-    console.log('useEffect')
     loadBlockchainData()
   }, [])
 
   window.ethereum.on('accountsChanged', async () => {
-    console.log('accountsChanged')
     await loadAccount(dispatch)
   })
 
   window.ethereum.on('networkChanged', async () => {
-    console.log('networkChanged')
     loadBlockchainData()
   })
 
@@ -99,6 +97,10 @@ function App() {
                 <Route path='/history' element={<History />}></Route>
               </Routes>
             )}
+
+            <hr />
+
+            <Faucet />
           </HashRouter>
         ) : (
           <div className='text-center my-5'>
@@ -106,8 +108,6 @@ function App() {
             <p className='my-2'>Connecting to the blockchain network...</p>
           </div>
         )}
-
-
     </Container>
   );
 }

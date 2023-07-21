@@ -29,10 +29,10 @@ async function main() {
     'Jetpacks',
     'JP',
     ether(.001),
-    1,
+    100,
     Date.now().toString().slice(0, 10),
     'x',
-    1
+    100
   )
 
   console.log(`Jetpacks deployed to ${jetpacks.address}`)
@@ -42,10 +42,10 @@ async function main() {
     'Hoverboards',
     'HB',
     ether(.001),
-    2,
+    100,
     Date.now().toString().slice(0, 10),
     'y',
-    2
+    100
   )
 
   console.log(`Hoverboards deployed to ${hoverboards.address}`)
@@ -55,10 +55,10 @@ async function main() {
     'AVAs',
     'AVA',
     ether(.001),
-    3,
+    100,
     Date.now().toString().slice(0, 10),
     'z',
-    3
+    100
   )
 
   console.log(`AVAs deployed to ${avas.address}`)
@@ -66,7 +66,7 @@ async function main() {
   const collections = [jetpacks.address, hoverboards.address, avas.address]
 
   const JACD = await hre.ethers.getContractFactory('JACD')
-  const jacd = await JACD.deploy(jacdToken.address, usdcToken.address, collections, 10, 100, 6, 3, votes(600), 12000, 12000)
+  const jacd = await JACD.deploy(jacdToken.address, usdcToken.address, collections, 10, 100, 600, 300, votes(60000), 12000, 12000)
 
   console.log(`JACD deployed to ${jacd.address}`)
 

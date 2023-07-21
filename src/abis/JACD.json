@@ -12,7 +12,7 @@
         "type": "address"
       },
       {
-        "internalType": "contract IERC721Enumerable[]",
+        "internalType": "contract NFT[]",
         "name": "_collections",
         "type": "address[]"
       },
@@ -214,7 +214,7 @@
     "name": "collections",
     "outputs": [
       {
-        "internalType": "contract IERC721Enumerable",
+        "internalType": "contract NFT",
         "name": "",
         "type": "address"
       }
@@ -266,6 +266,24 @@
   {
     "inputs": [
       {
+        "internalType": "address",
+        "name": "_from",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "faucetRequest",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "uint256",
         "name": "_index",
         "type": "uint256"
@@ -294,7 +312,7 @@
     "name": "getCollections",
     "outputs": [
       {
-        "internalType": "contract IERC721Enumerable[]",
+        "internalType": "contract NFT[]",
         "name": "",
         "type": "address[]"
       }

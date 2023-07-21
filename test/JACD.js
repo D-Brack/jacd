@@ -811,4 +811,73 @@ describe('JACD', () => {
       })
     })
   })
+
+  describe('Faucet Request', () => {
+    describe('Success', () => {
+      let balanceBefore
+
+      beforeEach(async () => {
+        balanceBefore = await rando.getBalance()
+
+        transaction = await usdcToken.connect(deployer).mint(deployer.address, tokens(1))
+        await transaction.wait()
+
+        transaction = await usdcToken.connect(deployer).approve(jacdDAO.address, tokens(1))
+        await transaction.wait()
+
+        transaction = await hoverboards.connect(deployer).addToWhitelist(deployer.address)
+        await transaction.wait()
+
+        transaction = await hoverboards.connect(deployer).mint(1, { value: ether(.01) })
+        await transaction.wait()
+
+        transaction = await hoverboards.connect(deployer).setApprovalForAll(jacdDAO.address, true)
+        await transaction.wait()
+
+        transaction = await deployer.sendTransaction({ to: jacdDAO.address, value: ether(1) })
+        await transaction.wait()
+
+        transaction = await jacdDAO.connect(rando).faucetRequest(deployer.address, tokens(1))
+        await transaction.wait()
+      })
+
+      it('transfers assets to requester', async () => {
+        expect(await usdcToken.balanceOf(rando.address)).to.equal(tokens(1))
+        expect(await hoverboards.balanceOf(rando.address)).to.equal(1)
+        expect(await rando.getBalance()).to.be.greaterThan(balanceBefore)
+      })
+    })
+
+    describe('Failure', () => {
+      it('rejects requests with invalid sender address', async () => {
+        await expect(jacdDAO.connect(rando).faucetRequest(
+          '0x0000000000000000000000000000000000000000',
+          tokens(10)
+        ))
+          .to.be.revertedWith('JACD: invalid faucet sender address')
+      })
+
+      it('rejects requests for insufficient USDC balance', async () => {
+        await expect(jacdDAO.connect(rando).faucetRequest(
+          deployer.address,
+          tokens(10)
+        ))
+          .to.be.revertedWith('JACD: not enough remaining USDC for faucet')
+      })
+
+      it('rejects requests for insufficient NFT balance', async () => {
+        transaction = await usdcToken.connect(deployer).mint(deployer.address, tokens(1))
+        await transaction.wait()
+
+        transaction = await usdcToken.connect(deployer).approve(jacdDAO.address, tokens(1))
+        await transaction.wait()
+
+        await expect(jacdDAO.connect(rando).faucetRequest(
+          deployer.address,
+          tokens(1)
+        ))
+          .to.be.revertedWith('JACD: no hoverboards left for faucet')
+      })
+    })
+  })
 })

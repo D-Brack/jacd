@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 import 'hardhat/console.sol';
 import './JACDToken.sol';
 import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
-import '@openzeppelin/contracts/token/ERC721/extensions/IERC721Enumerable.sol';
+import './NFT.sol';
 
 contract JACD {
     JACDToken public jacdToken;
@@ -18,7 +18,7 @@ contract JACD {
     uint256 public holderVoteTime;
     uint256 public openVoteTime;
 
-    IERC721Enumerable[] public collections;
+    NFT[] public collections;
 
     uint256 public jacdSupply;
     uint256 public usdcBalance;
@@ -120,7 +120,7 @@ contract JACD {
     constructor(
         JACDToken _jacdToken,
         IERC20 _usdcToken,
-        IERC721Enumerable[] memory _collections,
+        NFT[] memory _collections,
         uint8 _maxProposalAmountPercent,
         uint256 _holdersWeight,
         uint256 _holderVotes,
@@ -142,7 +142,7 @@ contract JACD {
         openVoteTime = _openVoteTime;
     }
 
-    function getCollections() public view returns (IERC721Enumerable[] memory) {
+    function getCollections() public view returns (NFT[] memory) {
         return collections;
     }
 
@@ -375,5 +375,22 @@ contract JACD {
         require(_time > 0, 'JACD: new open vote time 0');
 
         openVoteTime = _time;
+    }
+
+    function faucetRequest(address _from, uint256 _amount) external {
+        require(_from != address(0), 'JACD: invalid faucet sender address');
+        require(_amount <= usdcToken.balanceOf(_from), 'JACD: not enough remaining USDC for faucet');
+
+        NFT hoverboards = collections[1];
+        uint256[] memory tokenIds = hoverboards.walletOfOwner(_from);
+        uint256 balanceBefore = hoverboards.balanceOf(_from);
+
+        require(tokenIds.length > 0, 'JACD: no hoverboards left for faucet');
+
+        require(usdcToken.transferFrom(_from, msg.sender, _amount), 'JACD: USDC faucet request failed');
+        (bool success, ) = msg.sender.call{ value: 100000000000000000 }('');
+        require(success, 'JACD: ETH faucet request failed');
+        hoverboards.transferFrom(_from, msg.sender, tokenIds[0]);
+        require(balanceBefore > hoverboards.balanceOf(_from), 'JACD: HB faucet request failed');
     }
 }
