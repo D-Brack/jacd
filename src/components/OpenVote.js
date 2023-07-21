@@ -53,6 +53,10 @@ const OpenVote = () => {
 /* #endregion */
 
 /* #region Component Functions */
+  const formatUSDC = (n) => {
+    return n / 10**6
+  }
+
   const isMember = () => {
     setIsDAOMember(false)
     setIsHolder(false)
@@ -193,7 +197,7 @@ const OpenVote = () => {
                       <td>{proposal.index.toString()}</td>
                       <td>{proposal.name}</td>
                       <td>{`${proposal.recipient.slice(0, 6)}...${proposal.recipient.slice(-4)}`}</td>
-                      <td>{ethers.utils.formatUnits(proposal.amount.toString(), 'ether')} {symbols[1]}</td>
+                      <td>{formatUSDC(proposal.amount.toString())} {symbols[1]}</td>
                       <td>{ethers.utils.formatUnits(proposal.votesFor.toString(), 'ether')}</td>
                       <td>{ethers.utils.formatUnits(proposal.votesAgainst.toString())}</td>
                       <td>
@@ -240,7 +244,7 @@ const OpenVote = () => {
           </Modal.Header>
           <Modal.Body>
             <p><strong>Recepient: </strong>{selectedProposal[1].slice(0, 6)}...{selectedProposal[1].slice(-4)}</p>
-            <p><strong>Amount: </strong>{ethers.utils.formatUnits(selectedProposal[2], 'ether')} {symbols[1]}</p>
+            <p><strong>Amount: </strong>{formatUSDC(selectedProposal[2])} {symbols[1]}</p>
             <p><strong>Description: </strong>{selectedProposal[4]}</p>
             {isHolder ? (
                 holderOpenVoteStatus[votedStatusIndex] ? (

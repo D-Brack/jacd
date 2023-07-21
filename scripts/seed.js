@@ -8,6 +8,10 @@ const tokens = (amount) => {
 const ether = tokens
 const votes = tokens
 
+const usdc = (amount) => {
+  return amount * 10**6
+}
+
 async function main() {
   let transaction
 
@@ -23,10 +27,10 @@ async function main() {
 
   const usdcToken = await hre.ethers.getContractAt('JACDToken', config[chainId].usdcToken.address)
 
-  transaction = await usdcToken.connect(deployer).mint(deployer.address, tokens(1000))
+  transaction = await usdcToken.connect(deployer).mint(deployer.address, usdc(1000))
   await transaction.wait()
 
-  transaction = await usdcToken.connect(deployer).mint(contributor1.address, tokens(1000))
+  transaction = await usdcToken.connect(deployer).mint(contributor1.address, usdc(1000))
   await transaction.wait()
 
   console.log('minting jetpacks...')
@@ -36,7 +40,7 @@ async function main() {
   transaction = await jetpacks.connect(deployer).addToWhitelist(deployer.address)
   await transaction.wait()
 
-  transaction = await jetpacks.connect(deployer).mint(1, { value: ether(.01) })
+  transaction = await jetpacks.connect(deployer).mint(1, { value: ether(.001) })
   await transaction.wait()
 
   console.log('minting hoverboards...')
@@ -48,9 +52,9 @@ async function main() {
   transaction = await hoverboards.connect(deployer).addToWhitelist(holder2.address)
   await transaction.wait()
 
-  transaction = await hoverboards.connect(holder1).mint(1, { value: ether(.01) })
+  transaction = await hoverboards.connect(holder1).mint(1, { value: ether(.001) })
   await transaction.wait()
-  transaction = await hoverboards.connect(holder2).mint(1, { value: ether(.01) })
+  transaction = await hoverboards.connect(holder2).mint(1, { value: ether(.001) })
   await transaction.wait()
 
   console.log('minting avas...')
@@ -64,34 +68,34 @@ async function main() {
   transaction = await avas.connect(deployer).addToWhitelist(holder2.address)
   await transaction.wait()
 
-  transaction = await avas.connect(deployer).mint(1, { value: ether(.01) })
+  transaction = await avas.connect(deployer).mint(1, { value: ether(.001) })
   await transaction.wait()
-  transaction = await avas.connect(holder1).mint(1, { value: ether(.01) })
+  transaction = await avas.connect(holder1).mint(1, { value: ether(.001) })
   await transaction.wait()
-  transaction = await avas.connect(holder2).mint(1, { value: ether(.01) })
+  transaction = await avas.connect(holder2).mint(1, { value: ether(.001) })
   await transaction.wait()
 
   console.log('deposit usdc...')
 
   const dao = await hre.ethers.getContractAt('JACD', config[chainId].jacdDAO.address)
 
-  transaction = await usdcToken.connect(deployer).approve(dao.address, tokens(500))
+  transaction = await usdcToken.connect(deployer).approve(dao.address, usdc(500))
   await transaction.wait()
-  transaction = await usdcToken.connect(contributor1).approve(dao.address, tokens(1000))
+  transaction = await usdcToken.connect(contributor1).approve(dao.address, usdc(1000))
   await transaction.wait()
 
-  transaction = await dao.connect(deployer).receiveDeposit(tokens(500))
+  transaction = await dao.connect(deployer).receiveDeposit(usdc(500))
   await transaction.wait()
-  transaction = await dao.connect(contributor1).receiveDeposit(tokens(900))
+  transaction = await dao.connect(contributor1).receiveDeposit(usdc(900))
   await transaction.wait()
 
   console.log('creating proposals...')
 
-  transaction = await dao.connect(deployer).createProposal(deployer.address, tokens(100), 'Proposal 1', 'Description of Proposal 1')
+  transaction = await dao.connect(deployer).createProposal(deployer.address, usdc(100), 'Proposal 1', 'Description of Proposal 1')
   await transaction.wait()
-  transaction = await dao.connect(deployer).createProposal(deployer.address, tokens(100), 'Proposal 2', 'Description of Proposal 2')
+  transaction = await dao.connect(deployer).createProposal(deployer.address, usdc(100), 'Proposal 2', 'Description of Proposal 2')
   await transaction.wait()
-  transaction = await dao.connect(contributor1).createProposal(deployer.address, tokens(100), 'Proposal 3', 'Description of Proposal 3')
+  transaction = await dao.connect(contributor1).createProposal(deployer.address, usdc(100), 'Proposal 3', 'Description of Proposal 3')
   await transaction.wait()
 
   console.log('holder voting...')

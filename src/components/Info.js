@@ -7,6 +7,7 @@ import Form from 'react-bootstrap/Form'
 import Button from 'react-bootstrap/Button'
 import InputGroup from 'react-bootstrap/InputGroup'
 import Spinner from 'react-bootstrap/Spinner'
+import Alert from 'react-bootstrap/Alert'
 
 import {
   loadUserBalances,
@@ -19,6 +20,8 @@ const Info = () => {
 
   const [amount, setAmount] = useState(0)
   const [isWaiting, setIsWaiting] = useState(0)
+  const [showAlert, setShowAlert] = useState(false)
+  const [depositSuccess, setDepositSuccess] = useState(false)
 
   const provider = useSelector((state) => state.provider.connection)
   const account = useSelector((state) => state.provider.account)
@@ -37,77 +40,99 @@ const Info = () => {
   const donateHandler = async (e) => {
     e.preventDefault()
     setIsWaiting(true)
+    setShowAlert(false)
 
-    await submitDonation(provider, dao, tokens, amount)
+    const success = await submitDonation(provider, dao, tokens, amount)
+    setDepositSuccess(success)
 
     await loadDAOBalances(tokens, dao, dispatch)
     await loadUserBalances(tokens, account, dispatch)
 
     setAmount(0)
     setIsWaiting(false)
+
+    setShowAlert(true)
   }
 
   return(
-    <CardGroup className='mx-auto my-4' style={{maxWidth: '1000px'}}>
-      <Card style={{maxWidth: '500px'}}>
-        <Card.Header as='h3' >DAO Info</Card.Header>
-        <Card.Body>
-          <Card.Title as='h4'>Token Info</Card.Title>
-          <Card.Text><strong>{symbols[1]} Balance: </strong>{usdcBalance}</Card.Text>
-          <Card.Text><strong>Outstanding {symbols[0]} Votes: </strong>{jacdSupply}</Card.Text>
-          <Card.Text><strong>Total Proposals Submitted: </strong>{proposals.length}</Card.Text>
-          <Card.Text>
-            <strong>Currently Active Proposals: </strong>{holderProposals.length + openProposals.length}<br />
-            <span>Holders only voting stage: {holderProposals.length}<br /></span>
-            <span>Open voting stage: {openProposals.length}</span>
-          </Card.Text>
-
-          <hr />
-
-          <Card.Title as='h3'>Donate Now!</Card.Title>
-
-          <Form onSubmit={donateHandler}>
-            <Form.Group className='my-3'>
-              <Form.Label>Amount</Form.Label>
-              <InputGroup>
-                <Form.Control type='number' step='any' required onChange={(e) => setAmount(e.target.value)} value={amount} min={1}></Form.Control>
-                <InputGroup.Text>{symbols[1]}</InputGroup.Text>
-              </InputGroup>
-            </Form.Group>
-            {isWaiting ? (
-              <Spinner animation='border' className='d-block mx-auto' />
-            ) : (
-              <Button style={{width: '100%'}} disabled={!account} type='submit' >
-                {account ? 'Donate' : 'Connect Wallet'}
-              </Button>
-            )}
-            <p style={{color: 'red', marginTop: '8px'}}>***Receive 1 {symbols[0]} vote for each {symbols[1]} donated***</p>
-          </Form>
-        </Card.Body>
-      </Card>
-
-      <Card style={{maxWidth: '500px'}}>
-        <Card.Header as='h3' >Your Info</Card.Header>
-        {account ? (
+    <>
+      <CardGroup className='mx-auto my-4' style={{maxWidth: '1000px'}}>
+        <Card style={{maxWidth: '500px'}}>
+          <Card.Header as='h3' >DAO Info</Card.Header>
           <Card.Body>
-            <Card.Title as='h4'>Token Balances</Card.Title>
-            <Card.Text><strong>{symbols[1]} Balance: </strong>{balances[1]}</Card.Text>
-            <Card.Text><strong>Available {symbols[0]} Votes: </strong>{balances[0]}</Card.Text>
+            <Card.Title as='h4'>Token Info</Card.Title>
+            <Card.Text><strong>{symbols[1]} Balance: </strong>{usdcBalance}</Card.Text>
+            <Card.Text><strong>Outstanding {symbols[0]} Votes: </strong>{jacdSupply}</Card.Text>
+            <Card.Text><strong>Total Proposals Submitted: </strong>{proposals.length}</Card.Text>
+            <Card.Text>
+              <strong>Currently Active Proposals: </strong>{holderProposals.length + openProposals.length}<br />
+              <span>Holders only voting stage: {holderProposals.length}<br /></span>
+              <span>Open voting stage: {openProposals.length}</span>
+            </Card.Text>
 
             <hr />
 
-            <Card.Title as='h4'>NFT Balances</Card.Title>
-            {names.map((name, index) => (
-              <Card.Text key={index}><strong>{name}: </strong>{nftBalances[index]}</Card.Text>
-            ))}
+            <Card.Title as='h3'>Donate Now!</Card.Title>
+
+            <Form onSubmit={donateHandler}>
+              <Form.Group className='my-3'>
+                <Form.Label>Amount</Form.Label>
+                <InputGroup>
+                  <Form.Control type='number' step='any' required onChange={(e) => setAmount(e.target.value)} value={amount} min={1}></Form.Control>
+                  <InputGroup.Text>{symbols[1]}</InputGroup.Text>
+                </InputGroup>
+              </Form.Group>
+              {isWaiting ? (
+                <Spinner animation='border' className='d-block mx-auto' />
+              ) : (
+                <Button style={{width: '100%'}} disabled={!account} type='submit' >
+                  {account ? 'Donate' : 'Connect Wallet'}
+                </Button>
+              )}
+              <p style={{color: 'red', marginTop: '8px'}}>***Receive 1 {symbols[0]} vote for each {symbols[1]} donated***</p>
+            </Form>
           </Card.Body>
+        </Card>
+
+        <Card style={{maxWidth: '500px'}}>
+          <Card.Header as='h3' >Your Info</Card.Header>
+          {account ? (
+            <Card.Body>
+              <Card.Title as='h4'>Token Balances</Card.Title>
+              <Card.Text><strong>{symbols[1]} Balance: </strong>{balances[1]}</Card.Text>
+              <Card.Text><strong>Available {symbols[0]} Votes: </strong>{balances[0]}</Card.Text>
+
+              <hr />
+
+              <Card.Title as='h4'>NFT Balances</Card.Title>
+              {names.map((name, index) => (
+                <Card.Text key={index}><strong>{name}: </strong>{nftBalances[index]}</Card.Text>
+              ))}
+            </Card.Body>
+          ) : (
+            <Card.Body>
+              <p>Please connect your wallet.</p>
+            </Card.Body>
+          )}
+        </Card>
+      </CardGroup>
+
+      {showAlert && (
+        depositSuccess ? (
+          <Alert className='mx-auto' style={{ maxWidth: '400px' }} dismissible variant='success'>
+            <Alert.Heading>Donation Submission</Alert.Heading>
+            <hr />
+            <p>Donation successful!</p>
+          </Alert>
         ) : (
-          <Card.Body>
-            <p>Please connect your wallet.</p>
-          </Card.Body>
-        )}
-      </Card>
-    </CardGroup>
+          <Alert className='mx-auto' style={{ maxWidth: '400px' }} dismissible variant='danger'>
+            <Alert.Heading>Donation Submission</Alert.Heading>
+            <hr />
+            <p>Donation failed!</p>
+          </Alert>
+        )
+      )}
+    </>
   )
 }
 

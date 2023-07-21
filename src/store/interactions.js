@@ -1,7 +1,8 @@
 import { ethers } from 'ethers'
 import config from '../config.json'
 
-import TOKEN_ABI from '../abis/JACDToken.json'
+import JACD_TOKEN_ABI from '../abis/JACDToken.json'
+import USDC_TOKEN_ABI from '../abis/USDCToken.json'
 import DAO_ABI from '../abis/JACD.json'
 import NFT_ABI from '../abis/NFT.json'
 
@@ -40,6 +41,13 @@ import {
   setNFTBalances
 } from './reducers/nfts'
 
+const parseUSDC = (n) => {
+  return n * 10**6
+}
+
+const formatUSDC = (n) => {
+  return n / 10**6
+}
 
 //-----------------------------------------------------------------
 /* #region Network Info */
@@ -71,8 +79,8 @@ export const loadAccount = async (dispatch) => {
 /* #region Token Info */
 
 export const loadTokenContracts = async (chainId, provider, dispatch) => {
-  const jacdToken = new ethers.Contract(config[chainId].jacdToken.address, TOKEN_ABI, provider)
-  const usdcToken = new ethers.Contract(config[chainId].usdcToken.address, TOKEN_ABI, provider)
+  const jacdToken = new ethers.Contract(config[chainId].jacdToken.address, JACD_TOKEN_ABI, provider)
+  const usdcToken = new ethers.Contract(config[chainId].usdcToken.address, USDC_TOKEN_ABI, provider)
 
   dispatch(setContracts([jacdToken, usdcToken]))
   dispatch(setSymbols([await jacdToken.symbol(), await usdcToken.symbol()]))
@@ -81,7 +89,7 @@ export const loadTokenContracts = async (chainId, provider, dispatch) => {
 
 export const loadUserBalances = async (tokens, account, dispatch) => {
   const jacdBalance = ethers.utils.formatUnits(await tokens[0].balanceOf(account), 'ether')
-  const usdcBalance = ethers.utils.formatUnits(await tokens[1].balanceOf(account), 'ether')
+  const usdcBalance = formatUSDC(await tokens[1].balanceOf(account))
 
   dispatch(setBalances([jacdBalance, usdcBalance]))
   return([jacdBalance, usdcBalance])
@@ -104,7 +112,7 @@ export const loadDAOContract = async (tokens, chainId, provider, dispatch) => {
 }
 
 export const loadDAOBalances = async (tokens, dao, dispatch) => {
-  const usdcBalance = ethers.utils.formatUnits(await tokens[1].balanceOf(dao.address), 'ether')
+  const usdcBalance = formatUSDC(await tokens[1].balanceOf(dao.address))
   const jacdSupply = ethers.utils.formatUnits(await tokens[0].totalSupply(), 'ether')
 
   dispatch(setUSDCBalance(usdcBalance))
@@ -228,7 +236,8 @@ export const submitDonation = async (provider, dao, tokens, amount) => {
   try {
     let transaction
 
-    amount = ethers.utils.parseUnits(amount, 'ether')
+    amount = parseUSDC(amount)
+    console.log(amount)
 
     const signer = provider.getSigner()
 
@@ -238,8 +247,9 @@ export const submitDonation = async (provider, dao, tokens, amount) => {
     transaction = await dao.connect(signer).receiveDeposit(amount)
     await transaction.wait()
 
+    return true
   } catch (error) {
-    window.alert('Donation Submission Failed')
+    return false
   }
 }
 
@@ -247,7 +257,7 @@ export const createProposal = async (provider, dao, recipient, amount, name, des
   try {
     let transaction
 
-    amount = ethers.utils.parseUnits(amount, 'ether')
+    amount = parseUSDC(amount)
 
     const signer = provider.getSigner()
 
@@ -328,7 +338,7 @@ export const faucetRequest = async (provider, chainId, dao) => {
   try {
     let transaction
 
-    const amount = ethers.utils.parseUnits('100', 'ether')
+    const amount = parseUSDC(100)
 
     const signer = provider.getSigner()
 

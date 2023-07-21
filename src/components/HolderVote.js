@@ -39,6 +39,10 @@ const HolderVote = () => {
   const holderProposals = useSelector((state) => state.dao.holderProposals)
   const holderVoteStatus = useSelector((state) => state.dao.holderVoteStatus)
 
+  const formatUSDC = (n) => {
+    return n / 10**6
+  }
+
   const getVotes = async () => {
     let votes = 0
 
@@ -146,7 +150,7 @@ const HolderVote = () => {
                       <td>{proposal.index.toString()}</td>
                       <td>{proposal.name}</td>
                       <td>{`${proposal.recipient.slice(0, 6)}...${proposal.recipient.slice(-4)}`}</td>
-                      <td>{ethers.utils.formatUnits(proposal.amount.toString(), 'ether')} {symbols[1]}</td>
+                      <td>{formatUSDC(proposal.amount)} {symbols[1]}</td>
                       <td>{proposal.votesFor.toString()}</td>
                       <td>{proposal.votesAgainst.toString()}</td>
                       <td>
@@ -196,7 +200,7 @@ const HolderVote = () => {
           </Modal.Header>
           <Modal.Body>
             <p><strong>Recepient: </strong>{selectedProposal[1].slice(0, 6)}...{selectedProposal[1].slice(-4)}</p>
-            <p><strong>Amount: </strong>{ethers.utils.formatUnits(selectedProposal[2], 'ether')} {symbols[1]}</p>
+            <p><strong>Amount: </strong>{formatUSDC(selectedProposal[2])} {symbols[1]}</p>
             <p><strong>Description: </strong>{selectedProposal[4]}</p>
             <p><strong>Holder Votes To Submit: </strong>{userHolderVotes}</p>
           </Modal.Body>

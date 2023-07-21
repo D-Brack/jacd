@@ -167,12 +167,14 @@ contract JACD {
     }
 
     function distributeTokens(address _depositer, uint256 _amount) private {
+        uint256 formattedAmount = _amount * 10**12;
+
         require(
-            jacdToken.mint(_depositer, _amount),
+            jacdToken.mint(_depositer, formattedAmount),
             'JACD: distribution of JACD tokens failed'
         );
 
-        jacdSupply += _amount;
+        jacdSupply += formattedAmount;
     }
 
     function createProposal(

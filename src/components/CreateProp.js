@@ -97,7 +97,7 @@ const Info = () => {
               </Form.Group>
               <Form.Group className='mb-3'>
                 <Form.Label>Description</Form.Label>
-                <Form.Control type='textbox' required onChange={(e) => setDescription(e.target.value)} value={description} placeholder='Enter proposal description'></Form.Control>
+                <Form.Control type='textarea' required onChange={(e) => setDescription(e.target.value)} value={description} placeholder='Enter proposal description'></Form.Control>
               </Form.Group>
               {isWaiting ? (
                 <Spinner animation='border' className='d-block mx-auto' />
