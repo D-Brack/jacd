@@ -52,10 +52,8 @@ function App() {
       const closedProposals = await loadClosedProposals(proposals, dispatch)
       const nfts = await loadNFTContracts(provider, dao, dispatch)
     } else {
-      if(onChain) {
         setOnChain(false)
         window.alert('Please connect wallet to Sepolia chain.')
-      }
     }
 
     setIsLoading(false)

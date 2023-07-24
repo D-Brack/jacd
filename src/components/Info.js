@@ -56,6 +56,22 @@ const Info = () => {
 
   return(
     <>
+      {showAlert && (
+        depositSuccess ? (
+          <Alert className='mx-auto' style={{ maxWidth: '400px' }} dismissible variant='success'>
+            <Alert.Heading>Donation Submission</Alert.Heading>
+            <hr />
+            <p>Donation successful!</p>
+          </Alert>
+        ) : (
+          <Alert className='mx-auto' style={{ maxWidth: '400px' }} dismissible variant='danger'>
+            <Alert.Heading>Donation Submission</Alert.Heading>
+            <hr />
+            <p>Donation failed!</p>
+          </Alert>
+        )
+      )}
+
       <CardGroup className='mx-auto my-4' style={{maxWidth: '1000px'}}>
         <Card style={{maxWidth: '500px'}}>
           <Card.Header as='h3' >DAO Info</Card.Header>
@@ -116,22 +132,6 @@ const Info = () => {
           )}
         </Card>
       </CardGroup>
-
-      {showAlert && (
-        depositSuccess ? (
-          <Alert className='mx-auto' style={{ maxWidth: '400px' }} dismissible variant='success'>
-            <Alert.Heading>Donation Submission</Alert.Heading>
-            <hr />
-            <p>Donation successful!</p>
-          </Alert>
-        ) : (
-          <Alert className='mx-auto' style={{ maxWidth: '400px' }} dismissible variant='danger'>
-            <Alert.Heading>Donation Submission</Alert.Heading>
-            <hr />
-            <p>Donation failed!</p>
-          </Alert>
-        )
-      )}
     </>
   )
 }

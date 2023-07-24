@@ -264,8 +264,9 @@ export const createProposal = async (provider, dao, recipient, amount, name, des
     transaction = await dao.connect(signer).createProposal(recipient, amount, name, description)
     await transaction.wait()
 
+    return true
   } catch (error) {
-    window.alert('New proposal not recorded')
+    return false
   }
 }
 
@@ -278,8 +279,9 @@ export const submitHoldersVote = async (provider, dao, index, voteFor) => {
     transaction = await dao.connect(signer).holdersVote(index, voteFor)
     await transaction.wait()
 
+    return true
   } catch (error) {
-    window.alert('Votes submission failed')
+    return false
   }
 }
 
@@ -292,8 +294,9 @@ export const finalizeHoldersVote = async (provider, dao, index) => {
     transaction = await dao.connect(signer).finalizeHoldersVote(index)
     await transaction.wait()
 
+    return true
   } catch (error) {
-    window.alert('Holders stage finalization failed')
+    return false
   }
 }
 
@@ -315,8 +318,9 @@ export const submitOpenVote = async (provider, dao, tokens, index, voteFor, jacd
     transaction = await dao.connect(signer).openVote(index, voteFor, jacdVotes)
     await transaction.wait()
 
+    return true
   } catch (error) {
-    window.alert('Votes submission failed')
+    return false
   }
 }
 
@@ -329,8 +333,9 @@ export const finalizeProposal = async (provider, chainId, dao, index) => {
     transaction = await dao.connect(signer).finalizeProposal(index)
     await transaction.wait()
 
+    return true
   } catch (error) {
-    window.alert('Proposal failed to finalize')
+    return false
   }
 }
 

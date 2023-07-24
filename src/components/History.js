@@ -16,6 +16,10 @@ const History = () => {
   const proposals = useSelector((state) => state.dao.proposals)
   const closedProposals = useSelector((state) => state.dao.closedProposals)
 
+  const formatUSDC = (n) => {
+    return n / 10**6
+  }
+
   const returnStage = (stage) => {
     if(stage === '2') {return 'Finalized'}
 
@@ -49,7 +53,7 @@ const History = () => {
                       <td>{proposal.index.toString()}</td>
                       <td>{proposal.name}</td>
                       <td>{`${proposal.recipient.slice(0, 6)}...${proposal.recipient.slice(-4)}`}</td>
-                      <td>{ethers.utils.formatUnits(proposal.amount.toString(), 'ether')} {symbols[1]}</td>
+                      <td>{formatUSDC(proposal.amount.toString())} {symbols[1]}</td>
                       <td>{returnStage(proposal.stage.toString())}</td>
                     </tr>
                   ))}

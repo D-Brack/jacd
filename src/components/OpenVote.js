@@ -10,6 +10,7 @@ import Button from 'react-bootstrap/Button'
 import Modal from 'react-bootstrap/Modal'
 import Form from 'react-bootstrap/Form'
 import Spinner from 'react-bootstrap/Spinner'
+import Alert from 'react-bootstrap/Alert'
 
 import {
   loadUserBalances,
@@ -37,6 +38,11 @@ const OpenVote = () => {
   const [votingClosed, setVotingClosed] = useState(null)
   const [selectedProposal, setSelectedProposal] = useState(null)
   const [isVoting, setIsVoting] = useState(false)
+  const [showVoteAlert, setShowVoteAlert] = useState(false)
+  const [voteSuccess, setVoteSuccess] = useState(false)
+  const [showFinalizeAlert, setShowFinalizeAlert] = useState(false)
+  const [finalizeSuccess, setFinalizeSuccess] = useState(false)
+
 
   const provider = useSelector((state) => state.provider.connection)
   const account = useSelector((state) => state.provider.account)
@@ -96,6 +102,8 @@ const OpenVote = () => {
   }
 
   const showVoteModal = (e) => {
+    setShowVoteAlert(false)
+    setShowFinalizeAlert(false)
     setShowModal(true)
     const proposal = e.target.value.split(',')
     setVoteStatusIndex(proposal[9])
@@ -106,20 +114,6 @@ const OpenVote = () => {
     setShowModal(false)
     setJACDVotes(0)
   }
-
-  // const voteForHandler = (e) => {
-  //   setPropIndex(e.target.value[0])
-  //   setVoteStatusIndex(e.target.value[2])
-  //   setVoteFor(true)
-  //   setShowModal(true)
-  // }
-
-  // const voteAgainstHandler = (e) => {
-  //   setPropIndex(e.target.value[0])
-  //   setVoteStatusIndex(e.target.value[2])
-  //   setVoteFor(false)
-  //   setShowModal(true)
-  // }
 
   const voteHandler = async (e) => {
     setIsVoting(true)
@@ -132,7 +126,8 @@ const OpenVote = () => {
       voteFor = false
     }
 
-    await submitOpenVote(provider, dao, tokens, selectedProposal[0], voteFor, jacdVotes, dispatch)
+    const success = await submitOpenVote(provider, dao, tokens, selectedProposal[0], voteFor, jacdVotes, dispatch)
+    setVoteSuccess(success)
 
     await loadUserBalances(tokens, account, dispatch)
     const proposals = await loadProposals(dao, dispatch)
@@ -141,15 +136,22 @@ const OpenVote = () => {
 
     dismissModal()
     setIsVoting(false)
+    setShowVoteAlert(true)
   }
 
   const finalizeHandler = async (e) => {
-    await finalizeProposal(provider, dao, e.target.value)
+    setShowVoteAlert(false)
+    setShowFinalizeAlert(false)
+
+    const success = await finalizeProposal(provider, dao, e.target.value)
+    setFinalizeSuccess(success)
 
     const proposals = await loadProposals(dao, dispatch)
     const openProposals = await loadOpenProposals(proposals, dispatch)
     await loadHolderOpenVoteStatus(dao, openProposals, account, dispatch)
     await loadClosedProposals(proposals, dispatch)
+
+    setShowFinalizeAlert(true)
   }
 /* #endregion */
 
@@ -167,6 +169,38 @@ const OpenVote = () => {
 
   return(
     <>
+      {showVoteAlert && (
+        voteSuccess ? (
+          <Alert className='mx-auto' style={{ maxWidth: '400px' }} dismissible variant='success'>
+            <Alert.Heading>Vote Submission</Alert.Heading>
+            <hr />
+            <p>Vote successful!</p>
+          </Alert>
+        ) : (
+          <Alert className='mx-auto' style={{ maxWidth: '400px' }} dismissible variant='danger'>
+            <Alert.Heading>Vote Submission</Alert.Heading>
+            <hr />
+            <p>Vote failed!</p>
+          </Alert>
+        )
+      )}
+
+      {showFinalizeAlert && (
+        finalizeSuccess ? (
+          <Alert className='mx-auto' style={{ maxWidth: '400px' }} dismissible variant='success'>
+            <Alert.Heading>Finalize Open Stage</Alert.Heading>
+            <hr />
+            <p>Finalization successful!</p>
+          </Alert>
+        ) : (
+          <Alert className='mx-auto' style={{ maxWidth: '400px' }} dismissible variant='danger'>
+            <Alert.Heading>Finalize Open Stage</Alert.Heading>
+            <hr />
+            <p>Finalization failed!</p>
+          </Alert>
+        )
+      )}
+
       <Card className='my-4'>
         <Card.Header as='h3' >Open Voting Proposals</Card.Header>
         {account ? (
@@ -210,7 +244,7 @@ const OpenVote = () => {
                             ) : (
                               <div>
                                 <Button value={[proposal, index]} onClick={showVoteModal}>View/Vote</Button>
-                                {holderOpenVoteStatus[index] ? <span>(holder votes submitted)</span> : ''}
+                                {holderOpenVoteStatus[index] ? <span className='mx-2'>(holder votes submitted)</span> : ''}
                               </div>
                         )))}
                       </td>
@@ -260,7 +294,7 @@ const OpenVote = () => {
             <Form>
               <Form.Group>
                 <Form.Label><strong>JACD votes to submit</strong> {`(${balances[0]} JACD available)`}<strong></strong></Form.Label>
-                <Form.Control type='number' step='any' value={jacdVotes} onChange={(e) => setJACDVotes(e.target.value)} max={balances[0]} min={0} required></Form.Control>
+                <Form.Control type='number' step='any' value={jacdVotes} onChange={(e) => setJACDVotes(e.target.value)} max={balances[0]} min={1} required></Form.Control>
               </Form.Group>
             </Form>
             ) : (
