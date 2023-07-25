@@ -42,6 +42,7 @@ const OpenVote = () => {
   const [voteSuccess, setVoteSuccess] = useState(false)
   const [showFinalizeAlert, setShowFinalizeAlert] = useState(false)
   const [finalizeSuccess, setFinalizeSuccess] = useState(false)
+  const [showNoVoteAlert, setShowNoVoteAlert] = useState(false)
 
 
   const provider = useSelector((state) => state.provider.connection)
@@ -104,6 +105,7 @@ const OpenVote = () => {
   const showVoteModal = (e) => {
     setShowVoteAlert(false)
     setShowFinalizeAlert(false)
+    setShowNoVoteAlert(false)
     setShowModal(true)
     const proposal = e.target.value.split(',')
     setVoteStatusIndex(proposal[9])
@@ -120,10 +122,17 @@ const OpenVote = () => {
 
     let voteFor
 
-    if(e.target.value === true) {
+    if(Boolean(e.target.value) === true) {
       voteFor = true
     } else {
       voteFor = false
+    }
+
+    if(holderOpenVoteStatus[votedStatusIndex] && jacdVotes === 0) {
+      setShowNoVoteAlert(true)
+      dismissModal()
+      setIsVoting(false)
+      return
     }
 
     const success = await submitOpenVote(provider, dao, tokens, selectedProposal[0], voteFor, jacdVotes, dispatch)
@@ -171,13 +180,13 @@ const OpenVote = () => {
     <>
       {showVoteAlert && (
         voteSuccess ? (
-          <Alert className='mx-auto' style={{ maxWidth: '400px' }} dismissible variant='success'>
+          <Alert className='mx-auto my-4' style={{ maxWidth: '400px' }} dismissible variant='success'>
             <Alert.Heading>Vote Submission</Alert.Heading>
             <hr />
             <p>Vote successful!</p>
           </Alert>
         ) : (
-          <Alert className='mx-auto' style={{ maxWidth: '400px' }} dismissible variant='danger'>
+          <Alert className='mx-auto my-4' style={{ maxWidth: '400px' }} dismissible variant='danger'>
             <Alert.Heading>Vote Submission</Alert.Heading>
             <hr />
             <p>Vote failed!</p>
@@ -187,18 +196,26 @@ const OpenVote = () => {
 
       {showFinalizeAlert && (
         finalizeSuccess ? (
-          <Alert className='mx-auto' style={{ maxWidth: '400px' }} dismissible variant='success'>
+          <Alert className='mx-auto my-4' style={{ maxWidth: '400px' }} dismissible variant='success'>
             <Alert.Heading>Finalize Open Stage</Alert.Heading>
             <hr />
             <p>Finalization successful!</p>
           </Alert>
         ) : (
-          <Alert className='mx-auto' style={{ maxWidth: '400px' }} dismissible variant='danger'>
+          <Alert className='mx-auto my-4' style={{ maxWidth: '400px' }} dismissible variant='danger'>
             <Alert.Heading>Finalize Open Stage</Alert.Heading>
             <hr />
             <p>Finalization failed!</p>
           </Alert>
         )
+      )}
+
+      {showNoVoteAlert && (
+          <Alert className='mx-auto my-4' style={{ maxWidth: '400px' }} dismissible variant='secondary'>
+            <Alert.Heading>Vote Not Submitted</Alert.Heading>
+            <hr />
+            <p>No holder or JACD votes were submitted.</p>
+          </Alert>
       )}
 
       <Card className='my-4'>

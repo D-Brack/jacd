@@ -19,12 +19,6 @@ const TabNav = () => {
       <LinkContainer to='/history' >
          <Nav.Link className='mx-2' >History</Nav.Link>
       </LinkContainer>
-      {/* <Nav.Item>
-        <Link><Nav.Link className='mx-2' to='/create_proposal'>Create Proposal</Nav.Link></Link>
-      </Nav.Item>
-      <Link className='mx-2' to='/holder_voting'>Holder Voting</Link>
-      <Link className='mx-2' to='/open_voting'>Open Voting</Link>
-      <Link className='mx-2' to='/history'>History</Link> */}
     </Nav>
   )
 }

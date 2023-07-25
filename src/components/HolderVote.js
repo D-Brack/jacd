@@ -92,11 +92,14 @@ const HolderVote = () => {
 
     let voteFor
 
-    if(e.target.value === true) {
+    if(Boolean(e.target.value) === true) {
       voteFor = true
     } else {
       voteFor = false
     }
+
+    console.log(e.target.value)
+    console.log('voteFor', voteFor)
 
     const success = await submitHoldersVote(provider, dao, selectedProposal[0], voteFor)
     setVoteSuccess(success)
@@ -137,13 +140,13 @@ const HolderVote = () => {
     <>
       {showVoteAlert && (
         voteSuccess ? (
-          <Alert className='mx-auto' style={{ maxWidth: '400px' }} dismissible variant='success'>
+          <Alert className='mx-auto my-4' style={{ maxWidth: '400px' }} dismissible variant='success'>
             <Alert.Heading>Vote Submission</Alert.Heading>
             <hr />
             <p>Vote successful!</p>
           </Alert>
         ) : (
-          <Alert className='mx-auto' style={{ maxWidth: '400px' }} dismissible variant='danger'>
+          <Alert className='mx-auto my-4' style={{ maxWidth: '400px' }} dismissible variant='danger'>
             <Alert.Heading>Vote Submission</Alert.Heading>
             <hr />
             <p>Vote failed!</p>
@@ -153,13 +156,13 @@ const HolderVote = () => {
 
       {showFinalizeAlert && (
         finalizeSuccess ? (
-          <Alert className='mx-auto' style={{ maxWidth: '400px' }} dismissible variant='success'>
+          <Alert className='mx-auto my-4' style={{ maxWidth: '400px' }} dismissible variant='success'>
             <Alert.Heading>Finalize Holder Stage</Alert.Heading>
             <hr />
             <p>Finalization successful!</p>
           </Alert>
         ) : (
-          <Alert className='mx-auto' style={{ maxWidth: '400px' }} dismissible variant='danger'>
+          <Alert className='mx-auto my-4' style={{ maxWidth: '400px' }} dismissible variant='danger'>
             <Alert.Heading>Finalize Holder Stage</Alert.Heading>
             <hr />
             <p>Finalization failed!</p>
@@ -171,59 +174,59 @@ const HolderVote = () => {
         <Card.Header as='h3' >Holding Voting Proposals</Card.Header>
         {account ? (
           <Card.Body>
-            <Table striped bordered hover >
-              <thead>
-                <tr>
-                  <th>#</th>
-                  <th>Name</th>
-                  <th>Recipient</th>
-                  <th>Amount</th>
-                  <th>Votes For</th>
-                  <th>Votes Against</th>
-                  <th>Actions</th>
-                  <th>Time Remaining</th>
-                </tr>
-              </thead>
-              {holderProposals.length === 0 ? (
-                <tbody>
-                <tr>
-                  <td colSpan='8' style={{textAlign: 'center'}}>No proposals currently in holder voting phase</td>
-                </tr>
-                </tbody>
-              ) : (
-                <tbody>
-                  {holderProposals.map((proposal, index) => (
-                    <tr key={index}>
-                      <td>{proposal.index.toString()}</td>
-                      <td>{proposal.name}</td>
-                      <td>{`${proposal.recipient.slice(0, 6)}...${proposal.recipient.slice(-4)}`}</td>
-                      <td>{formatUSDC(proposal.amount)} {symbols[1]}</td>
-                      <td>{proposal.votesFor.toString()}</td>
-                      <td>{proposal.votesAgainst.toString()}</td>
-                      <td>
-                        {userHolderVotes > 0 && (
-                          (+(proposal.votesFor.toString()) + +(proposal.votesAgainst.toString())) === +holderVotes || votingClosed[index] ? (
-                            <Button value={proposal.index} onClick={finalizeHandler}>Finalize</Button>
-                          ) : (
-                            <div>
-                              {holderVoteStatus[index] ? (
-                                <p>You have voted</p>
-                              ) : (
-                                <>
-                                  <Button value={proposal} onClick={showVoteModal}>View/Vote</Button>
-                                </>
-                                )
-                              }
-                            </div>
-                        ))}
-                      </td>
-                      <td><Countdown date={(proposal.voteEnd * 1000) + 1000} onComplete={buildVotingClosed} /></td>
-                    </tr>
-                  ))}
-                </tbody>
-              )}
-            </Table>
-            {userHolderVotes === 0 && <p style={{color: 'red'}}>Purchase a NFT to participate in holder voting.</p>}
+              <Table striped bordered hover >
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Name</th>
+                    <th>Recipient</th>
+                    <th>Amount</th>
+                    <th>Votes For</th>
+                    <th>Votes Against</th>
+                    <th>Actions</th>
+                    <th>Time Remaining</th>
+                  </tr>
+                </thead>
+                {holderProposals.length === 0 ? (
+                  <tbody>
+                  <tr>
+                    <td colSpan='8' style={{textAlign: 'center'}}>No proposals currently in holder voting phase</td>
+                  </tr>
+                  </tbody>
+                ) : (
+                  <tbody>
+                    {holderProposals.map((proposal, index) => (
+                      <tr key={index}>
+                        <td>{proposal.index.toString()}</td>
+                        <td>{proposal.name}</td>
+                        <td>{`${proposal.recipient.slice(0, 6)}...${proposal.recipient.slice(-4)}`}</td>
+                        <td>{formatUSDC(proposal.amount)} {symbols[1]}</td>
+                        <td>{proposal.votesFor.toString()}</td>
+                        <td>{proposal.votesAgainst.toString()}</td>
+                        <td>
+                          {userHolderVotes > 0 && (
+                            (+(proposal.votesFor.toString()) + +(proposal.votesAgainst.toString())) === +holderVotes || votingClosed[index] ? (
+                              <Button value={proposal.index} onClick={finalizeHandler}>Finalize</Button>
+                            ) : (
+                              <div>
+                                {holderVoteStatus[index] ? (
+                                  <p>You have voted</p>
+                                ) : (
+                                  <>
+                                    <Button value={proposal} onClick={showVoteModal}>View/Vote</Button>
+                                  </>
+                                  )
+                                }
+                              </div>
+                          ))}
+                        </td>
+                        <td><Countdown date={(proposal.voteEnd * 1000) + 1000} onComplete={buildVotingClosed} /></td>
+                      </tr>
+                    ))}
+                  </tbody>
+                )}
+              </Table>
+              {userHolderVotes === 0 && <p style={{color: 'red'}}>Purchase a NFT to participate in holder voting.</p>}
           </Card.Body>
         ) : (
           <Card.Body>Please connect wallet</Card.Body>

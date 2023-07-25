@@ -8,6 +8,10 @@ const tokens = (amount) => {
 const ether = tokens
 const votes = tokens
 
+const usdc = (amount) => {
+  return amount * 10**6
+}
+
 async function main() {
   let transaction
 
@@ -15,17 +19,14 @@ async function main() {
 
   const accounts = await hre.ethers.getSigners()
   const deployer = accounts[0]
-  // const holder1 = accounts[1]
-  // const holder2 = accounts[2]
-  // const contributor1 = accounts[3]
 
   const { chainId } = await hre.ethers.provider.getNetwork()
 
-  console.log('minting and distributing USDC...')
+  console.log('minting USDC tokens...')
 
-  const usdcToken = await hre.ethers.getContractAt('JACDToken', config[chainId].usdcToken.address)
+  const usdcToken = await hre.ethers.getContractAt('USDCToken', config[chainId].usdcToken.address)
 
-  transaction = await usdcToken.connect(deployer).mint(deployer.address, tokens(1000000))
+  transaction = await usdcToken.connect(deployer).mint(deployer.address, usdc(1000000))
   await transaction.wait()
 
   console.log('minting jetpacks...')
@@ -42,14 +43,10 @@ async function main() {
 
   const hoverboards = await hre.ethers.getContractAt('NFT', config[chainId].hoverboards.address)
 
-
   transaction = await hoverboards.connect(deployer).addToWhitelist(deployer.address)
   await transaction.wait()
 
   transaction = await hoverboards.connect(deployer).mint(100, { value: ether(.1) })
-  await transaction.wait()
-  // transaction = await hoverboards.connect(holder2).mint(1, { value: ether(.001) })
-  // await transaction.wait()
 
   console.log('minting avas...')
 
@@ -57,87 +54,29 @@ async function main() {
 
   transaction = await avas.connect(deployer).addToWhitelist(deployer.address)
   await transaction.wait()
-  // transaction = await avas.connect(deployer).addToWhitelist(holder1.address)
-  // await transaction.wait()
-  // transaction = await avas.connect(deployer).addToWhitelist(holder2.address)
-  // await transaction.wait()
 
   transaction = await avas.connect(deployer).mint(100, { value: ether(.1) })
   await transaction.wait()
-  // transaction = await avas.connect(holder1).mint(1, { value: ether(.01) })
-  // await transaction.wait()
-  // transaction = await avas.connect(holder2).mint(1, { value: ether(.01) })
-  // await transaction.wait()
 
-  console.log('deposit usdc...')
+  console.log('send ETH to DAO...')
 
   const dao = await hre.ethers.getContractAt('JACD', config[chainId].jacdDAO.address)
 
   transaction = await deployer.sendTransaction({ to: dao.address, value: ether(1000)})
   await transaction.wait()
 
-  // for(let i = 0; i < 100; i++) {
-  //   hoverboards.connect(deployer).transferFrom(deployer.address, dao.address, i)
-  // }
+  console.log('approve DAO to transfer assets...')
 
-  // transaction = await usdcToken.connect(deployer).mint(deployer.address, tokens(1000000))
-  // await transaction.wait()
-
-  transaction = await usdcToken.connect(deployer).approve(dao.address, tokens(1000000))
+  transaction = await usdcToken.connect(deployer).approve(dao.address, usdc(1000000))
   await transaction.wait()
 
   transaction = await hoverboards.connect(deployer).setApprovalForAll(dao.address, true)
   await transaction.wait()
-  // transaction = await usdcToken.connect(contributor1).approve(dao.address, tokens(1000))
-  // await transaction.wait()
 
-  transaction = await dao.connect(deployer).receiveDeposit(tokens(500))
+  console.log('deposit USDC...')
+
+  transaction = await dao.connect(deployer).receiveDeposit(usdc(500))
   await transaction.wait()
-  // transaction = await dao.connect(contributor1).receiveDeposit(tokens(900))
-  // await transaction.wait()
-
-  // console.log('creating proposals...')
-
-  // transaction = await dao.connect(deployer).createProposal(deployer.address, tokens(100), 'Proposal 1', 'Description of Proposal 1')
-  // await transaction.wait()
-  // transaction = await dao.connect(deployer).createProposal(deployer.address, tokens(100), 'Proposal 2', 'Description of Proposal 2')
-  // await transaction.wait()
-  // transaction = await dao.connect(contributor1).createProposal(deployer.address, tokens(100), 'Proposal 3', 'Description of Proposal 3')
-  // await transaction.wait()
-
-  // console.log('holder voting...')
-
-  // transaction = await dao.connect(deployer).holdersVote(1, true)
-  // await transaction.wait()
-  // transaction = await dao.connect(holder1).holdersVote(1, true)
-  // await transaction.wait()
-  // transaction = await dao.connect(holder2).holdersVote(1, true)
-  // await transaction.wait()
-
-  // transaction = await dao.connect(holder1).holdersVote(2, true)
-  // await transaction.wait()
-  // transaction = await dao.connect(holder2).holdersVote(2, false)
-  // await transaction.wait()
-
-  // transaction = await dao.connect(holder1).holdersVote(3, false)
-  // await transaction.wait()
-  // transaction = await dao.connect(holder2).holdersVote(3, false)
-  // await transaction.wait()
-
-  // console.log('passing holder vote stage...')
-
-  // transaction = await dao.connect(deployer).finalizeHoldersVote(1)
-  // await transaction.wait()
-
-  // console.log('open voting...')
-
-  // const jacdToken = await hre.ethers.getContractAt('JACDToken', config[chainId].jacdToken.address)
-
-  // transaction = await jacdToken.connect(contributor1).approve(dao.address, tokens(300))
-  // await transaction.wait()
-
-  // transaction = await dao.connect(contributor1).openVote(1, true, votes(300))
-  // await transaction.wait()
 
   console.log('finished!')
 }

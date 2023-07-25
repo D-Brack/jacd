@@ -22,11 +22,11 @@ const Navigation = () => {
   const openProposals = useSelector((state) => state.dao.openProposals)
 
   const connectHandler = async () => {
-    let address = await loadAccount(dispatch)
-    await loadUserBalances(tokens, address, dispatch)
-    await loadNFTBalances(nfts, address, dispatch)
-    await loadHolderVoteStatus(dao, holderProposals, address, dispatch)
-    await loadHolderOpenVoteStatus(dao, openProposals, address, dispatch)
+    let account = await loadAccount(dispatch)
+    await loadUserBalances(tokens, account, dispatch)
+    await loadNFTBalances(nfts, account, dispatch)
+    await loadHolderVoteStatus(dao, holderProposals, account, dispatch)
+    await loadHolderOpenVoteStatus(dao, openProposals, account, dispatch)
   }
 
   useEffect(() => {

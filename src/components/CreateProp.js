@@ -15,7 +15,7 @@ import {
   loadProposals
 } from '../store/interactions'
 
-const Info = () => {
+const Info = ({ setIsLoading }) => {
   const dispatch = useDispatch()
 
   const [isDAOMember, setIsDAOMember] = useState(false)
@@ -37,19 +37,24 @@ const Info = () => {
   const nftBalances = useSelector((state) => state.nfts.nftBalances)
 
   const isMember = () => {
+    setIsLoading(true)
     setIsDAOMember(false)
 
     if(balances[0] > 0) {
       setIsDAOMember(true)
+      setIsLoading(false)
       return
     }
 
     for(let i = 0; i < nftBalances.length; i++) {
       if(nftBalances[i] > 0) {
         setIsDAOMember(true)
+        setIsLoading(false)
         return
       }
     }
+
+    setIsLoading(false)
   }
 
   const submitHandler = async (e) => {
@@ -82,13 +87,13 @@ const Info = () => {
     <>
       {showAlert && (
         proposalSuccess ? (
-          <Alert className='mx-auto' style={{ maxWidth: '400px' }} dismissible variant='success'>
+          <Alert className='mx-auto my-4' style={{ maxWidth: '400px' }} dismissible variant='success'>
             <Alert.Heading>Proposal Submission</Alert.Heading>
             <hr />
             <p>Submission successful!</p>
           </Alert>
         ) : (
-          <Alert className='mx-auto' style={{ maxWidth: '400px' }} dismissible variant='danger'>
+          <Alert className='mx-auto my-4' style={{ maxWidth: '400px' }} dismissible variant='danger'>
             <Alert.Heading>Proposal Submission</Alert.Heading>
             <hr />
             <p>Submission failed!</p>
@@ -133,7 +138,7 @@ const Info = () => {
             <Card.Body style={{color: 'red'}}>Purchase a NFT or donate to DAO to submit new proposals</Card.Body>
           )
         ) : (
-          <p>Please connect your wallet</p>
+          <Card.Body>Please connect your wallet</Card.Body>
         )}
       </Card>
     </>

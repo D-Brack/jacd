@@ -43,7 +43,7 @@ const History = () => {
               {closedProposals.length === 0 ? (
                 <tbody>
                 <tr>
-                  <td colSpan='5' style={{textAlign: 'center'}}>No finalized or failed proposals</td>
+                  <td colSpan='5' style={{textAlign: 'center'}}>No proposal history</td>
                 </tr>
                 </tbody>
               ) : (

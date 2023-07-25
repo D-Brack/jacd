@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 
 import CardGroup from 'react-bootstrap/CardGroup'
@@ -27,10 +27,10 @@ const Info = () => {
   const account = useSelector((state) => state.provider.account)
   const tokens = useSelector((state) => state.tokens.contracts)
   const symbols = useSelector((state) => state.tokens.symbols)
+  const dao = useSelector((state) => state.dao.contract)
   const balances = useSelector((state) => state.tokens.balances)
   const usdcBalance = useSelector((state) => state.dao.usdcBalance)
   const jacdSupply = useSelector((state) => state.dao.jacdSupply)
-  const dao = useSelector((state) => state.dao.contract)
   const proposals = useSelector((state) => state.dao.proposals)
   const holderProposals = useSelector((state) => state.dao.holderProposals)
   const openProposals = useSelector((state) => state.dao.openProposals)
@@ -58,7 +58,7 @@ const Info = () => {
     <>
       {showAlert && (
         depositSuccess ? (
-          <Alert className='mx-auto' style={{ maxWidth: '400px' }} dismissible variant='success'>
+          <Alert className='mx-auto' style={{ maxWidth: '400px' }} dismissible variant='success' >
             <Alert.Heading>Donation Submission</Alert.Heading>
             <hr />
             <p>Donation successful!</p>
@@ -77,13 +77,16 @@ const Info = () => {
           <Card.Header as='h3' >DAO Info</Card.Header>
           <Card.Body>
             <Card.Title as='h4'>Token Info</Card.Title>
-            <Card.Text><strong>{symbols[1]} Balance: </strong>{usdcBalance}</Card.Text>
-            <Card.Text><strong>Outstanding {symbols[0]} Votes: </strong>{jacdSupply}</Card.Text>
-            <Card.Text><strong>Total Proposals Submitted: </strong>{proposals.length}</Card.Text>
-            <Card.Text>
+            <Card.Text className='ps-3'><strong>{symbols[1]} Balance: </strong>{usdcBalance}</Card.Text>
+            <Card.Text className='ps-3'><strong>Outstanding {symbols[0]} Votes: </strong>{jacdSupply}</Card.Text>
+
+            <hr />
+            <Card.Title as='h4'>Proposal Info</Card.Title>
+            <Card.Text className='ps-3'><strong>Total Proposals Submitted: </strong>{proposals.length}</Card.Text>
+            <Card.Text className='ps-3'>
               <strong>Currently Active Proposals: </strong>{holderProposals.length + openProposals.length}<br />
-              <span>Holders only voting stage: {holderProposals.length}<br /></span>
-              <span>Open voting stage: {openProposals.length}</span>
+              <span className='ps-3'>Holders only stage: {holderProposals.length}<br /></span>
+              <span className='ps-3'>Open stage: {openProposals.length}</span>
             </Card.Text>
 
             <hr />
@@ -115,14 +118,14 @@ const Info = () => {
           {account ? (
             <Card.Body>
               <Card.Title as='h4'>Token Balances</Card.Title>
-              <Card.Text><strong>{symbols[1]} Balance: </strong>{balances[1]}</Card.Text>
-              <Card.Text><strong>Available {symbols[0]} Votes: </strong>{balances[0]}</Card.Text>
+              <Card.Text className='ps-3'><strong>{symbols[1]} Balance: </strong>{balances[1]}</Card.Text>
+              <Card.Text className='ps-3'><strong>Available {symbols[0]} Votes: </strong>{balances[0]}</Card.Text>
 
               <hr />
 
               <Card.Title as='h4'>NFT Balances</Card.Title>
               {names.map((name, index) => (
-                <Card.Text key={index}><strong>{name}: </strong>{nftBalances[index]}</Card.Text>
+                <Card.Text key={index} className='ps-3'><strong>{name}: </strong>{nftBalances[index]}</Card.Text>
               ))}
             </Card.Body>
           ) : (
