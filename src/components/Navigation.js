@@ -1,3 +1,4 @@
+/* #region Dependencies */
 import Navbar from 'react-bootstrap/Navbar'
 import Button from 'react-bootstrap/Button'
 
@@ -10,8 +11,12 @@ import {
   loadHolderOpenVoteStatus
 } from '../store/interactions'
 import { useEffect } from 'react'
+/* #endregion */
 
 const Navigation = () => {
+
+  /* #region Component Variables */
+
   const dispatch = useDispatch()
 
   const account = useSelector((state) => state.provider.account)
@@ -28,12 +33,16 @@ const Navigation = () => {
     await loadHolderVoteStatus(dao, holderProposals, account, dispatch)
     await loadHolderOpenVoteStatus(dao, openProposals, account, dispatch)
   }
+  /* #endregion */
+
+  /* #region Hooks */
 
   useEffect(() => {
     if(account) {
       connectHandler()
     }
   }, [account])
+/* #endregion */
 
   return(
     <Navbar className='my-3'>

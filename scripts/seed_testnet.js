@@ -36,8 +36,10 @@ async function main() {
   transaction = await jetpacks.connect(deployer).addToWhitelist(deployer.address)
   await transaction.wait()
 
-  transaction = await jetpacks.connect(deployer).mint(100, { value: ether(.1) })
-  await transaction.wait()
+  for(let x = 0; x < 10; x++) {
+    transaction = await jetpacks.connect(deployer).mint(100, { value: ether(.01) })
+    await transaction.wait()
+  }
 
   console.log('minting hoverboards...')
 
@@ -46,7 +48,7 @@ async function main() {
   transaction = await hoverboards.connect(deployer).addToWhitelist(deployer.address)
   await transaction.wait()
 
-  transaction = await hoverboards.connect(deployer).mint(100, { value: ether(.1) })
+  transaction = await hoverboards.connect(deployer).mint(100, { value: ether(.01) })
 
   console.log('minting avas...')
 
@@ -55,14 +57,7 @@ async function main() {
   transaction = await avas.connect(deployer).addToWhitelist(deployer.address)
   await transaction.wait()
 
-  transaction = await avas.connect(deployer).mint(100, { value: ether(.1) })
-  await transaction.wait()
-
-  console.log('send ETH to DAO...')
-
-  const dao = await hre.ethers.getContractAt('JACD', config[chainId].jacdDAO.address)
-
-  transaction = await deployer.sendTransaction({ to: dao.address, value: ether(1000)})
+  transaction = await avas.connect(deployer).mint(100, { value: ether(.01) })
   await transaction.wait()
 
   console.log('approve DAO to transfer assets...')

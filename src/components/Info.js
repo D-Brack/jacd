@@ -1,3 +1,5 @@
+/* #region Dependencies */
+
 import { useEffect, useState } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 
@@ -14,8 +16,12 @@ import {
   loadDAOBalances,
   submitDonation
 } from '../store/interactions'
+/* #endregion */
 
 const Info = () => {
+
+  /* #region Component Variables */
+
   const dispatch = useDispatch()
 
   const [amount, setAmount] = useState(0)
@@ -36,6 +42,9 @@ const Info = () => {
   const openProposals = useSelector((state) => state.dao.openProposals)
   const names = useSelector((state) => state.nfts.names)
   const nftBalances = useSelector((state) => state.nfts.nftBalances)
+  /* #endregion */
+
+  /* #region Component Functions */
 
   const donateHandler = async (e) => {
     e.preventDefault()
@@ -53,18 +62,19 @@ const Info = () => {
 
     setShowAlert(true)
   }
+/* #endregion */
 
   return(
     <>
       {showAlert && (
         depositSuccess ? (
-          <Alert className='mx-auto' style={{ maxWidth: '400px' }} dismissible variant='success' >
+          <Alert className='mx-auto my-4' style={{ maxWidth: '400px' }} dismissible variant='success' >
             <Alert.Heading>Donation Submission</Alert.Heading>
             <hr />
             <p>Donation successful!</p>
           </Alert>
         ) : (
-          <Alert className='mx-auto' style={{ maxWidth: '400px' }} dismissible variant='danger'>
+          <Alert className='mx-auto my-4' style={{ maxWidth: '400px' }} dismissible variant='danger'>
             <Alert.Heading>Donation Submission</Alert.Heading>
             <hr />
             <p>Donation failed!</p>
@@ -97,7 +107,14 @@ const Info = () => {
               <Form.Group className='my-3'>
                 <Form.Label>Amount</Form.Label>
                 <InputGroup>
-                  <Form.Control type='number' step='any' required onChange={(e) => setAmount(e.target.value)} value={amount} min={1}></Form.Control>
+                  <Form.Control
+                    type='number'
+                    step='any'
+                    required
+                    onChange={(e) => setAmount(e.target.value)}
+                    value={amount}
+                    min={1}
+                  />
                   <InputGroup.Text>{symbols[1]}</InputGroup.Text>
                 </InputGroup>
               </Form.Group>

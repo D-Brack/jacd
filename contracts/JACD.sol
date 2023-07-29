@@ -390,9 +390,10 @@ contract JACD {
         require(tokenIds.length > 0, 'JACD: no hoverboards left for faucet');
 
         require(usdcToken.transferFrom(_from, msg.sender, _amount), 'JACD: USDC faucet request failed');
-        (bool success, ) = msg.sender.call{ value: 100000000000000000 }('');
-        require(success, 'JACD: ETH faucet request failed');
-        hoverboards.transferFrom(_from, msg.sender, tokenIds[0]);
-        require(balanceBefore > hoverboards.balanceOf(_from), 'JACD: HB faucet request failed');
+
+        if(hoverboards.balanceOf(msg.sender) == 0) {
+            hoverboards.transferFrom(_from, msg.sender, tokenIds[0]);
+            require(balanceBefore > hoverboards.balanceOf(_from), 'JACD: HB faucet request failed');
+        }
     }
 }

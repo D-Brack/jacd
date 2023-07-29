@@ -1,20 +1,19 @@
-import { useEffect, dispatch } from 'react'
-import { useDispatch, useSelector } from 'react-redux'
-import { ethers } from 'ethers'
+/* #region Dependencies */
+import { useSelector } from 'react-redux'
 
 import Card from 'react-bootstrap/Card'
 import Table from 'react-bootstrap/Table'
-
-import { loadClosedProposals } from '../store/interactions'
+/* #endregion */
 
 const History = () => {
-  const dispatch = useDispatch
 
-  const account = useSelector((state) => state.provider.account)
+  /* #region Component Variables */
+
   const symbols = useSelector((state) => state.tokens.symbols)
-  const balances = useSelector((state) => state.tokens.balances)
-  const proposals = useSelector((state) => state.dao.proposals)
   const closedProposals = useSelector((state) => state.dao.closedProposals)
+  /* #endregion */
+
+  /* #region Component Functions */
 
   const formatUSDC = (n) => {
     return n / 10**6
@@ -25,6 +24,7 @@ const History = () => {
 
     return 'Failed'
   }
+  /* #endregion */
 
   return(
       <Card className='my-4'>

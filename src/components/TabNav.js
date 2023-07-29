@@ -1,7 +1,11 @@
+/* #region Dependencies */
+
 import Nav from 'react-bootstrap/Nav'
 import { LinkContainer } from 'react-router-bootstrap'
+/* #endregion */
 
 const TabNav = () => {
+
   return(
     <Nav variant='underline' className='justify-content-center'>
       <LinkContainer to='/' >

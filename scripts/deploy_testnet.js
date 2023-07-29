@@ -19,8 +19,8 @@ async function main() {
 
   console.log(`JACD Coin deployed to ${jacdToken.address}`)
 
-  const USDCToken = await hre.ethers.getContractFactory('JACDToken')
-  const usdcToken = await USDCToken.deploy('USD Coin', 'USDC')
+  const USDCToken = await hre.ethers.getContractFactory('USDCToken')
+  const usdcToken = await USDCToken.deploy('USD Coin', 'USDC', 0)
 
   console.log(`USDC Coin deployed to ${usdcToken.address}`)
 
@@ -28,11 +28,11 @@ async function main() {
   const jetpacks = await Jetpacks.deploy(
     'Jetpacks',
     'JP',
-    ether(.001),
-    100,
+    ether(.0001),
+    1000,
     Date.now().toString().slice(0, 10),
     'x',
-    100
+    1000
   )
 
   console.log(`Jetpacks deployed to ${jetpacks.address}`)
@@ -41,11 +41,11 @@ async function main() {
   const hoverboards = await Hoverboards.deploy(
     'Hoverboards',
     'HB',
-    ether(.001),
-    100,
+    ether(.0001),
+    1000,
     Date.now().toString().slice(0, 10),
     'y',
-    100
+    1000
   )
 
   console.log(`Hoverboards deployed to ${hoverboards.address}`)
@@ -54,11 +54,11 @@ async function main() {
   const avas = await AVAs.deploy(
     'AVAs',
     'AVA',
-    ether(.001),
-    100,
+    ether(.0001),
+    1000,
     Date.now().toString().slice(0, 10),
     'z',
-    100
+    1000
   )
 
   console.log(`AVAs deployed to ${avas.address}`)
@@ -66,7 +66,7 @@ async function main() {
   const collections = [jetpacks.address, hoverboards.address, avas.address]
 
   const JACD = await hre.ethers.getContractFactory('JACD')
-  const jacd = await JACD.deploy(jacdToken.address, usdcToken.address, collections, 10, 100, 300, 150, votes(300), 12000, 12000)
+  const jacd = await JACD.deploy(jacdToken.address, usdcToken.address, collections, 10, 100, 3000, 1500, votes(2101), 86400, 86400)
 
   console.log(`JACD deployed to ${jacd.address}`)
 

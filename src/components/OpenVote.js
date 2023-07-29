@@ -14,12 +14,14 @@ import Alert from 'react-bootstrap/Alert'
 
 import {
   loadUserBalances,
+  loadDAOBalances,
   loadHolderOpenVoteStatus,
   loadOpenProposals,
   loadProposals,
   loadClosedProposals,
   submitOpenVote,
-  finalizeProposal
+  finalizeProposal,
+  loadNFTBalances
 } from '../store/interactions'
 /* #endregion */
 
@@ -122,7 +124,7 @@ const OpenVote = () => {
 
     let voteFor
 
-    if(Boolean(e.target.value) === true) {
+    if(e.target.value === 'true') {
       voteFor = true
     } else {
       voteFor = false
@@ -139,6 +141,7 @@ const OpenVote = () => {
     setVoteSuccess(success)
 
     await loadUserBalances(tokens, account, dispatch)
+    await loadDAOBalances(tokens, dao, dispatch)
     const proposals = await loadProposals(dao, dispatch)
     const openProposals = await loadOpenProposals(proposals, dispatch)
     await loadHolderOpenVoteStatus(dao, openProposals, account, dispatch)
@@ -310,8 +313,16 @@ const OpenVote = () => {
             {isContributor ? (
             <Form>
               <Form.Group>
-                <Form.Label><strong>JACD votes to submit</strong> {`(${balances[0]} JACD available)`}<strong></strong></Form.Label>
-                <Form.Control type='number' step='any' value={jacdVotes} onChange={(e) => setJACDVotes(e.target.value)} max={balances[0]} min={1} required></Form.Control>
+                <Form.Label><strong>JACD votes to submit</strong> {`(${balances[0]} JACD available)`}</Form.Label>
+                <Form.Control
+                  type='number'
+                  step='any'
+                  value={jacdVotes}
+                  onChange={(e) => setJACDVotes(e.target.value)}
+                  max={balances[0]}
+                  min={1}
+                  required
+                />
               </Form.Group>
             </Form>
             ) : (

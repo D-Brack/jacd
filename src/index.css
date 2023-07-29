@@ -5,3 +5,7 @@
 .nav-link:hover {
     color: darkgray;
 }
+
+a {
+    text-decoration: none;
+}

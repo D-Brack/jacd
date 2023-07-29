@@ -1,3 +1,5 @@
+/* #region Dependencies */
+
 import { ethers } from 'ethers'
 import config from '../config.json'
 
@@ -40,6 +42,9 @@ import {
   setNames,
   setNFTBalances
 } from './reducers/nfts'
+/* #endregion */
+
+/* #region Component Functions */
 
 const parseUSDC = (n) => {
   return n * 10**6
@@ -48,8 +53,8 @@ const parseUSDC = (n) => {
 const formatUSDC = (n) => {
   return n / 10**6
 }
+/* #endregion */
 
-//-----------------------------------------------------------------
 /* #region Network Info */
 
 export const loadProvider = (dispatch) => {
@@ -75,7 +80,6 @@ export const loadAccount = async (dispatch) => {
 }
 /* #endregion */
 
-//-----------------------------------------------------------------
 /* #region Token Info */
 
 export const loadTokenContracts = async (chainId, provider, dispatch) => {
@@ -96,7 +100,6 @@ export const loadUserBalances = async (tokens, account, dispatch) => {
 }
 /* #endregion */
 
-//-----------------------------------------------------------------
 /* #region DAO Info */
 
 export const loadDAOContract = async (tokens, chainId, provider, dispatch) => {
@@ -199,7 +202,6 @@ export const loadClosedProposals = (proposals, dispatch) => {
 }
 /* #endregion */
 
-//-----------------------------------------------------------------
 /* #region NFT Info */
 
 export const loadNFTContracts = async (provider, dao, dispatch) => {
@@ -229,7 +231,6 @@ export const loadNFTBalances = async (nfts, account, dispatch) => {
 }
 /* #endregion */
 
-//-----------------------------------------------------------------
 /* #region Form & Vote Submissions */
 
 export const submitDonation = async (provider, dao, tokens, amount) => {
@@ -237,7 +238,6 @@ export const submitDonation = async (provider, dao, tokens, amount) => {
     let transaction
 
     amount = parseUSDC(amount)
-    console.log(amount)
 
     const signer = provider.getSigner()
 
@@ -309,8 +309,6 @@ export const submitOpenVote = async (provider, dao, tokens, index, voteFor, jacd
     if(jacdVotes > 0) {
       jacdVotes = ethers.utils.parseUnits(jacdVotes.toString(), 'ether')
 
-      console.log(jacdVotes)
-
       transaction = await tokens[0].connect(signer).approve(dao.address, jacdVotes)
       await transaction.wait()
     }
@@ -324,7 +322,7 @@ export const submitOpenVote = async (provider, dao, tokens, index, voteFor, jacd
   }
 }
 
-export const finalizeProposal = async (provider, chainId, dao, index) => {
+export const finalizeProposal = async (provider, dao, index) => {
   try {
     let transaction
 
@@ -339,11 +337,15 @@ export const finalizeProposal = async (provider, chainId, dao, index) => {
   }
 }
 
-export const faucetRequest = async (provider, chainId, dao) => {
+export const faucetRequest = async (provider, chainId, dao, hasUSDC) => {
   try {
-    let transaction
+    let transaction, amount
 
-    const amount = parseUSDC(100)
+    if(hasUSDC) {
+      amount = 0
+    } else {
+      amount = parseUSDC(100)
+    }
 
     const signer = provider.getSigner()
 

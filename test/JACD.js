@@ -38,7 +38,7 @@ describe('JACD', () => {
     jacdToken = await JACDToken.deploy('JACD Coin', 'JACD')
 
     const USDCToken = await ethers.getContractFactory('USDCToken')
-    usdcToken = await USDCToken.deploy('USD Coin', 'USDC')
+    usdcToken = await USDCToken.deploy('USD Coin', 'USDC', 0)
 
     transaction = await usdcToken.connect(deployer).mint(contributor.address, AMOUNTINUSDC)
     await transaction.wait()
@@ -824,16 +824,16 @@ describe('JACD', () => {
       beforeEach(async () => {
         balanceBefore = await rando.getBalance()
 
-        transaction = await usdcToken.connect(deployer).mint(deployer.address, tokens(1))
+        transaction = await usdcToken.connect(deployer).mint(deployer.address, tokens(2))
         await transaction.wait()
 
-        transaction = await usdcToken.connect(deployer).approve(jacdDAO.address, tokens(1))
+        transaction = await usdcToken.connect(deployer).approve(jacdDAO.address, tokens(2))
         await transaction.wait()
 
         transaction = await hoverboards.connect(deployer).addToWhitelist(deployer.address)
         await transaction.wait()
 
-        transaction = await hoverboards.connect(deployer).mint(1, { value: ether(.01) })
+        transaction = await hoverboards.connect(deployer).mint(2, { value: ether(.02) })
         await transaction.wait()
 
         transaction = await hoverboards.connect(deployer).setApprovalForAll(jacdDAO.address, true)
@@ -849,7 +849,14 @@ describe('JACD', () => {
       it('transfers assets to requester', async () => {
         expect(await usdcToken.balanceOf(rando.address)).to.equal(tokens(1))
         expect(await hoverboards.balanceOf(rando.address)).to.equal(1)
-        expect(await rando.getBalance()).to.be.greaterThan(balanceBefore)
+      })
+
+      it('does not transfer nft if requestor already holds one', async () => {
+        transaction = await jacdDAO.connect(rando).faucetRequest(deployer.address, tokens(1))
+        await transaction.wait()
+
+        expect(await usdcToken.balanceOf(rando.address)).to.equal(tokens(2))
+        expect(await hoverboards.balanceOf(rando.address)).to.equal(1)
       })
     })
 

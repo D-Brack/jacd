@@ -1,3 +1,5 @@
+/* #region Dependencies */
+
 import { useEffect, useState } from 'react'
 import { useDispatch } from 'react-redux'
 import { HashRouter, Routes, Route } from 'react-router-dom'
@@ -27,13 +29,19 @@ import {
   loadNFTContracts,
   loadClosedProposals
 } from '../store/interactions'
+/* #endregion */
 
 function App() {
+
+  /* #region Component Variables */
   const dispatch = useDispatch()
 
   const [isLoading, setIsLoading] = useState(true)
   const [onChain, setOnChain] = useState(false)
   const [showAlert, setShowAlert] = useState(false)
+  /* #endregion */
+
+  /* #region Component Functions */
 
   const loadBlockchainData = async () => {
     setIsLoading(true)
@@ -46,12 +54,12 @@ function App() {
 
       const tokens = await loadTokenContracts(chainId, provider, dispatch)
       const dao = await loadDAOContract(tokens, chainId, provider, dispatch)
-      const daoBalances = await loadDAOBalances(tokens, dao, dispatch)
+      await loadDAOBalances(tokens, dao, dispatch)
       const proposals = await loadProposals(dao, dispatch)
-      const holderProposals = await loadHolderProposals(proposals, dispatch)
-      const openProposals = await loadOpenProposals(proposals, dispatch)
-      const closedProposals = await loadClosedProposals(proposals, dispatch)
-      const nfts = await loadNFTContracts(provider, dao, dispatch)
+      await loadHolderProposals(proposals, dispatch)
+      await loadOpenProposals(proposals, dispatch)
+      await loadClosedProposals(proposals, dispatch)
+      await loadNFTContracts(provider, dao, dispatch)
     } else {
         //setOnChain(false)
         setShowAlert(true)
@@ -59,10 +67,16 @@ function App() {
 
     setIsLoading(false)
   }
+  /* #endregion */
+
+  /* #region Hooks */
 
   useEffect(() => {
     loadBlockchainData()
   }, [])
+  /* #endregion */
+
+  /* #region Event Listeners */
 
   window.ethereum.on('accountsChanged', async () => {
     await loadAccount(dispatch)
@@ -73,6 +87,7 @@ function App() {
     setOnChain(false)
     await loadBlockchainData()
   })
+  /* #endregion */
 
   return (
     <Container>
@@ -92,14 +107,12 @@ function App() {
             ) : (
               <Routes>
                 <Route exact path='/' element={<Info />}></Route>
-                <Route path='/create_proposal' element={<CreateProp setIsLoading={setIsLoading} />}></Route>
+                <Route path='/create_proposal' element={<CreateProp />}></Route>
                 <Route path='/holder_voting' element={<HolderVote />}></Route>
                 <Route path='/open_voting' element={<OpenVote />}></Route>
                 <Route path='/history' element={<History />}></Route>
               </Routes>
             )}
-
-            <hr />
 
             <Faucet />
           </HashRouter>

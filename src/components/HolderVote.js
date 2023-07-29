@@ -1,3 +1,5 @@
+/* #region Dependencies */
+
 import { useEffect, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { ethers } from 'ethers'
@@ -20,8 +22,11 @@ import {
   loadHolderVoteStatus,
   loadHolderOpenVoteStatus
 } from '../store/interactions'
+/* #endregion */
 
 const HolderVote = () => {
+  /* #region Component Variables */
+
   const dispatch = useDispatch()
 
   const [userHolderVotes, setUserHolderVotes] = useState(0)
@@ -43,6 +48,9 @@ const HolderVote = () => {
   const minHolderVotesToPass = useSelector((state) => state.dao.minHolderVotesToPass)
   const holderProposals = useSelector((state) => state.dao.holderProposals)
   const holderVoteStatus = useSelector((state) => state.dao.holderVoteStatus)
+/* #endregion */
+
+  /* #region Component Functions */
 
   const formatUSDC = (n) => {
     return n / 10**6
@@ -92,14 +100,11 @@ const HolderVote = () => {
 
     let voteFor
 
-    if(Boolean(e.target.value) === true) {
+    if(e.target.value === 'true') {
       voteFor = true
     } else {
       voteFor = false
     }
-
-    console.log(e.target.value)
-    console.log('voteFor', voteFor)
 
     const success = await submitHoldersVote(provider, dao, selectedProposal[0], voteFor)
     setVoteSuccess(success)
@@ -129,12 +134,16 @@ const HolderVote = () => {
 
     setShowFinalizeAlert(true)
   }
+  /* #endregion */
+
+  /* #region Hooks */
 
   useEffect(() => {
     if(account) {
       getVotes()
     }
   }, [account, nftBalances])
+  /* #endregion */
 
   return(
     <>

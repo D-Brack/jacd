@@ -1,3 +1,5 @@
+/* #region Dependencies */
+
 import { useState, useEffect } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 
@@ -14,8 +16,11 @@ import {
   loadHolderVoteStatus,
   loadProposals
 } from '../store/interactions'
+/* #endregion */
 
-const Info = ({ setIsLoading }) => {
+const Info = () => {
+
+  /* #region Component Variables */
   const dispatch = useDispatch()
 
   const [isDAOMember, setIsDAOMember] = useState(false)
@@ -35,26 +40,24 @@ const Info = ({ setIsLoading }) => {
   const usdcBalance = useSelector((state) => state.dao.usdcBalance)
   const maxPropAmtPercent = useSelector((state) => state.dao.maxProposalAmountPercent)
   const nftBalances = useSelector((state) => state.nfts.nftBalances)
+  /* #endregion */
+
+  /* #region Component Functions */
 
   const isMember = () => {
-    setIsLoading(true)
     setIsDAOMember(false)
 
     if(balances[0] > 0) {
       setIsDAOMember(true)
-      setIsLoading(false)
       return
     }
 
     for(let i = 0; i < nftBalances.length; i++) {
       if(nftBalances[i] > 0) {
         setIsDAOMember(true)
-        setIsLoading(false)
         return
       }
     }
-
-    setIsLoading(false)
   }
 
   const submitHandler = async (e) => {
@@ -76,12 +79,16 @@ const Info = ({ setIsLoading }) => {
     setIsWaiting(false)
     setShowAlert(true)
   }
+  /* #endregion */
+
+  /* #region Hooks */
 
   useEffect(() => {
     if(account) {
       isMember()
     }
   }, [account, balances, nftBalances])
+  /* #endregion */
 
   return(
     <>
@@ -109,24 +116,50 @@ const Info = ({ setIsLoading }) => {
               <Form onSubmit={submitHandler}>
                 <Form.Group className='mb-3'>
                   <Form.Label>Recipient</Form.Label>
-                  <Form.Control type='text' required onChange={(e) => setRecipient(e.target.value)} value={recipient} placeholder='Enter wallet address'></Form.Control>
+                  <Form.Control
+                    type='text'
+                    required
+                    onChange={(e) => setRecipient(e.target.value)}
+                    value={recipient}
+                    placeholder='Enter wallet address'
+                  />
                 </Form.Group>
                 <Form.Group className='mb-3'>
                   <Form.Label>Amount</Form.Label>
                   <Form.Text> (Max amount per proposal: {maxPropAmtPercent * usdcBalance / 100} {symbols[1]})</Form.Text>
                   <InputGroup>
-                    <Form.Control type='number' step='any' required onChange={(e) => setAmount(e.target.value)} value={amount}></Form.Control>
+                    <Form.Control
+                      type='number'
+                      step='any'
+                      min='1'
+                      required
+                      onChange={(e) => setAmount(e.target.value)}
+                      value={amount}
+                    />
                     <InputGroup.Text>{symbols[1]}</InputGroup.Text>
                   </InputGroup>
                 </Form.Group>
                 <Form.Group className='mb-3'>
                   <Form.Label>Name</Form.Label>
-                  <Form.Control type='text' required onChange={(e) => setName(e.target.value)} value={name} placeholder='Enter proposal name'></Form.Control>
+                  <Form.Control
+                    type='text'
+                    required
+                    onChange={(e) => setName(e.target.value)}
+                    value={name}
+                    placeholder='Enter proposal name'
+                  />
                 </Form.Group>
                 <Form.Group className='mb-3'>
                   <Form.Label>Description</Form.Label>
-                  <Form.Control type='textarea' required onChange={(e) => setDescription(e.target.value)} value={description} placeholder='Enter proposal description'></Form.Control>
+                  <Form.Control
+                    type='textarea'
+                    required
+                    onChange={(e) => setDescription(e.target.value)}
+                    value={description}
+                    placeholder='Enter proposal description'
+                  />
                 </Form.Group>
+
                 {isWaiting ? (
                   <Spinner animation='border' className='d-block mx-auto' />
                 ) : (
