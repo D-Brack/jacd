@@ -162,6 +162,8 @@ const OpenVote = () => {
     const openProposals = await loadOpenProposals(proposals, dispatch)
     await loadHolderOpenVoteStatus(dao, openProposals, account, dispatch)
     await loadClosedProposals(proposals, dispatch)
+    await loadUserBalances(tokens, account, dispatch)
+    await loadDAOBalances(tokens, dao, dispatch)
 
     setShowFinalizeAlert(true)
   }

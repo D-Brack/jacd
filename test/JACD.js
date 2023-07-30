@@ -824,10 +824,10 @@ describe('JACD', () => {
       beforeEach(async () => {
         balanceBefore = await rando.getBalance()
 
-        transaction = await usdcToken.connect(deployer).mint(deployer.address, tokens(2))
+        transaction = await usdcToken.connect(deployer).mint(deployer.address, usdc(1000))
         await transaction.wait()
 
-        transaction = await usdcToken.connect(deployer).approve(jacdDAO.address, tokens(2))
+        transaction = await usdcToken.connect(deployer).approve(jacdDAO.address, usdc(1000))
         await transaction.wait()
 
         transaction = await hoverboards.connect(deployer).addToWhitelist(deployer.address)
@@ -839,23 +839,36 @@ describe('JACD', () => {
         transaction = await hoverboards.connect(deployer).setApprovalForAll(jacdDAO.address, true)
         await transaction.wait()
 
-        transaction = await deployer.sendTransaction({ to: jacdDAO.address, value: ether(1) })
-        await transaction.wait()
-
-        transaction = await jacdDAO.connect(rando).faucetRequest(deployer.address, tokens(1))
+        transaction = await jacdDAO.connect(rando).faucetRequest(deployer.address)
         await transaction.wait()
       })
 
       it('transfers assets to requester', async () => {
-        expect(await usdcToken.balanceOf(rando.address)).to.equal(tokens(1))
+        expect(await usdcToken.balanceOf(rando.address)).to.equal(usdc(100))
         expect(await hoverboards.balanceOf(rando.address)).to.equal(1)
       })
 
-      it('does not transfer nft if requestor already holds one', async () => {
-        transaction = await jacdDAO.connect(rando).faucetRequest(deployer.address, tokens(1))
+      //update
+      it('transfers just enough tokens so requestor has 100', async () => {
+        transaction = await jacdDAO.connect(rando).faucetRequest(deployer.address)
         await transaction.wait()
 
-        expect(await usdcToken.balanceOf(rando.address)).to.equal(tokens(2))
+        transaction = await usdcToken.connect(rando).approve(jacdDAO.address, usdc(50))
+        await transaction.wait()
+
+        transaction = await jacdDAO.connect(rando).receiveDeposit(usdc(50))
+        await transaction.wait()
+
+        transaction = await jacdDAO.connect(rando).faucetRequest(deployer.address)
+        await transaction.wait()
+
+        expect(await usdcToken.balanceOf(rando.address)).to.equal(usdc(100))
+      })
+
+      it('does not transfer nft if requestor already holds one', async () => {
+        transaction = await jacdDAO.connect(rando).faucetRequest(deployer.address)
+        await transaction.wait()
+
         expect(await hoverboards.balanceOf(rando.address)).to.equal(1)
       })
     })
@@ -863,30 +876,27 @@ describe('JACD', () => {
     describe('Failure', () => {
       it('rejects requests with invalid sender address', async () => {
         await expect(jacdDAO.connect(rando).faucetRequest(
-          '0x0000000000000000000000000000000000000000',
-          tokens(10)
+          '0x0000000000000000000000000000000000000000'
         ))
           .to.be.revertedWith('JACD: invalid faucet sender address')
       })
 
       it('rejects requests for insufficient USDC balance', async () => {
         await expect(jacdDAO.connect(rando).faucetRequest(
-          deployer.address,
-          tokens(10)
+          deployer.address
         ))
           .to.be.revertedWith('JACD: not enough remaining USDC for faucet')
       })
 
       it('rejects requests for insufficient NFT balance', async () => {
-        transaction = await usdcToken.connect(deployer).mint(deployer.address, tokens(1))
+        transaction = await usdcToken.connect(deployer).mint(deployer.address, usdc(100))
         await transaction.wait()
 
-        transaction = await usdcToken.connect(deployer).approve(jacdDAO.address, tokens(1))
+        transaction = await usdcToken.connect(deployer).approve(jacdDAO.address, usdc(100))
         await transaction.wait()
 
         await expect(jacdDAO.connect(rando).faucetRequest(
-          deployer.address,
-          tokens(1)
+          deployer.address
         ))
           .to.be.revertedWith('JACD: no hoverboards left for faucet')
       })

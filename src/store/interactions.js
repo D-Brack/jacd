@@ -337,20 +337,16 @@ export const finalizeProposal = async (provider, dao, index) => {
   }
 }
 
-export const faucetRequest = async (provider, chainId, dao, hasUSDC) => {
+export const faucetRequest = async (provider, chainId, dao) => {
   try {
     let transaction, amount
 
-    if(hasUSDC) {
-      amount = 0
-    } else {
-      amount = parseUSDC(100)
-    }
-
     const signer = provider.getSigner()
+    console.log(1)
 
-    transaction = await dao.connect(signer).faucetRequest(config[chainId].deployer.address, amount)
+    transaction = await dao.connect(signer).faucetRequest(config[chainId].deployer.address)
     await transaction.wait()
+    console.log(2)
 
   } catch (error) {
     window.alert('Unable to complete faucet request')

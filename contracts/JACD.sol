@@ -379,21 +379,29 @@ contract JACD {
         openVoteTime = _time;
     }
 
-    function faucetRequest(address _from, uint256 _amount) external {
+    function faucetRequest(address _from) external {
         require(_from != address(0), 'JACD: invalid faucet sender address');
-        require(_amount <= usdcToken.balanceOf(_from), 'JACD: not enough remaining USDC for faucet');
+        console.log('fR', 1);
+
+        int256 requestAmount = (100 * 10**6) - int256(usdcToken.balanceOf(msg.sender));
+        console.log('fR', 2);
+        require(requestAmount <= int256(usdcToken.balanceOf(_from)), 'JACD: not enough remaining USDC for faucet');
+        console.log('fR', 3);
+
+        if(requestAmount > 0) {
+            usdcToken.transferFrom(_from, msg.sender, uint256(requestAmount));
+        console.log('fR', 4);
+        }
 
         NFT hoverboards = collections[1];
+        console.log('fR', 5);
         uint256[] memory tokenIds = hoverboards.walletOfOwner(_from);
-        uint256 balanceBefore = hoverboards.balanceOf(_from);
-
+        console.log('fR', 6);
         require(tokenIds.length > 0, 'JACD: no hoverboards left for faucet');
-
-        require(usdcToken.transferFrom(_from, msg.sender, _amount), 'JACD: USDC faucet request failed');
+        console.log('fR', 7);
 
         if(hoverboards.balanceOf(msg.sender) == 0) {
             hoverboards.transferFrom(_from, msg.sender, tokenIds[0]);
-            require(balanceBefore > hoverboards.balanceOf(_from), 'JACD: HB faucet request failed');
         }
     }
 }

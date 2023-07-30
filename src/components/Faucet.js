@@ -36,7 +36,7 @@ const Faucet = () => {
   const claimHandler = async () => {
     setIsClaiming(true)
 
-    await faucetRequest(provider, chainId, dao, hasUSDC)
+    await faucetRequest(provider, chainId, dao)
 
     await loadUserBalances(tokens, account, dispatch)
     await loadNFTBalances(nfts, account, dispatch)
@@ -74,11 +74,11 @@ const Faucet = () => {
             {isClaiming ? (
               <Button disabled>Claiming...</Button>
             ) : (
-              hasUSDC ? (
-                <Button disabled>Assets Claimed</Button>
-              ) : (
+              // hasUSDC ? (
+              //   <Button disabled>Assets Claimed</Button>
+              // ) : (
                 <Button onClick={claimHandler}>Claim Assets</Button>
-              )
+              // )
             )}
           </div>
 

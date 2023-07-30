@@ -91,44 +91,45 @@ function App() {
 
   return (
     <Container>
-        {onChain ? (
-          <HashRouter>
-            <Navigation />
+      {showAlert && (
+        <Alert className='mx-auto my-5' style={{ maxWidth: '400px' }} dismissible variant='danger' >
+          <Alert.Heading>Wrong Network</Alert.Heading>
+          <hr />
+          <p>Please connect to Sepolia network.</p>
+        </Alert>
+      )}
 
-            <hr />
+      {onChain ? (
+        <HashRouter>
+          <Navigation />
 
-            <TabNav />
+          <hr />
 
-            {isLoading ? (
-              <div className='text-center my-5'>
-                <Spinner animation="grow" />
-                <p className='my-2'>Loading Data...</p>
-              </div>
-            ) : (
-              <Routes>
-                <Route exact path='/' element={<Info />}></Route>
-                <Route path='/create_proposal' element={<CreateProp />}></Route>
-                <Route path='/holder_voting' element={<HolderVote />}></Route>
-                <Route path='/open_voting' element={<OpenVote />}></Route>
-                <Route path='/history' element={<History />}></Route>
-              </Routes>
-            )}
+          <TabNav />
 
-            <Faucet />
-          </HashRouter>
-        ) : (
-          <div className='text-center my-5'>
-            <Spinner animation="grow" />
-            <p className='my-2'>Waiting for connection to the blockchain network...</p>
-          </div>
-        )}
+          {isLoading ? (
+            <div className='text-center my-5'>
+              <Spinner animation="grow" />
+              <p className='my-2'>Loading Data...</p>
+            </div>
+          ) : (
+            <Routes>
+              <Route exact path='/' element={<Info />}></Route>
+              <Route path='/create_proposal' element={<CreateProp />}></Route>
+              <Route path='/holder_voting' element={<HolderVote />}></Route>
+              <Route path='/open_voting' element={<OpenVote />}></Route>
+              <Route path='/history' element={<History />}></Route>
+            </Routes>
+          )}
 
-        {showAlert && (
-          <Alert className='mx-auto' style={{ maxWidth: '400px' }} dismissible variant='danger' >
-            <Alert.Heading>Wrong Network</Alert.Heading>
-            <hr />
-            <p>Please connect to Sepolia network.</p>
-          </Alert>)}
+          <Faucet />
+        </HashRouter>
+      ) : (
+        <div className='text-center my-5'>
+          <Spinner animation="grow" />
+          <p className='my-2'>Waiting for connection to the blockchain network...</p>
+        </div>
+      )}
     </Container>
   );
 }

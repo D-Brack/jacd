@@ -62,6 +62,8 @@ async function main() {
 
   console.log('approve DAO to transfer assets...')
 
+  const dao = await hre.ethers.getContractAt('JACD', config[chainId].jacdDAO.address)
+
   transaction = await usdcToken.connect(deployer).approve(dao.address, usdc(1000000))
   await transaction.wait()
 
