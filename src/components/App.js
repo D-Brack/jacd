@@ -49,7 +49,7 @@ function App() {
     const provider = await loadProvider(dispatch)
     const chainId = await loadChainId(provider, dispatch)
 
-    if(chainId === 31337) {
+    if(chainId === 31337 || chainId === 31337) {
       setOnChain(true)
 
       const tokens = await loadTokenContracts(chainId, provider, dispatch)
