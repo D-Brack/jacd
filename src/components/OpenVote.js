@@ -1,5 +1,5 @@
 /* #region Dependencies */
-import { useEffect, dispatch, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { ethers } from 'ethers'
 
@@ -20,8 +20,7 @@ import {
   loadProposals,
   loadClosedProposals,
   submitOpenVote,
-  finalizeProposal,
-  loadNFTBalances
+  finalizeProposal
 } from '../store/interactions'
 /* #endregion */
 

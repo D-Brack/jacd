@@ -24,22 +24,25 @@
   },
   "11155111" : {
     "jacdToken" : {
-      "address" : ""
+      "address" : "0x252d30aB52E9608046472ef55C9D0e0C9fc85cF6"
     },
     "jacdDAO" : {
-      "address" : ""
+      "address" : "0x7EA11eCe407ed848aF704319ed38f5EF9863d04b"
     },
     "usdcToken" : {
-      "address": ""
+      "address": "0xE247AF1B03613834a449477b0c4Ae27C99407dAD"
     },
     "jetpacks" : {
-      "address" : ""
+      "address" : "0xB34F0c0de9f33Dde3031154c5BfA875800Fa49B3"
     },
     "hoverboards" : {
-      "address" : ""
+      "address" : "0x30F4036FB34dBf7C21360d68C0AF5E272FfC2733"
     },
     "avas" : {
-      "address" : ""
+      "address" : "0x1383B1249ee1c35C9Ea925A3d308c46b1b6dFFc8"
+    },
+    "deployer" : {
+      "address" : "0x505f182A86EA667860B82A61Fa67c1927A2Ff92f"
     }
   }
 }

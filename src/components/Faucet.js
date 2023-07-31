@@ -18,7 +18,7 @@ const Faucet = () => {
 
   const dispatch = useDispatch()
 
-  const [hasUSDC, setHasUSDC] = useState(false)
+  const [canClaim, setCanClaim] = useState(true)
   const [isClaiming, setIsClaiming] = useState(false)
 
   const provider = useSelector((state) => state.provider.connection)
@@ -29,6 +29,7 @@ const Faucet = () => {
   const balances = useSelector((state) => state.tokens.balances)
   const dao = useSelector((state) => state.dao.contract)
   const nfts = useSelector((state) => state.nfts.collections)
+  const nftBalances = useSelector((state) => state.nfts.nftBalances)
   /* #endregion */
 
   /* #region Component Functions */
@@ -45,10 +46,10 @@ const Faucet = () => {
   }
 
   const checkForAssets = () => {
-    if(balances[1] > 0) {
-      setHasUSDC(true)
+    if(balances[1] >= 100 && nftBalances[1] > 0) {
+      setCanClaim(false)
     } else {
-      setHasUSDC(false)
+      setCanClaim(true)
     }
   }
   /* #endregion */
@@ -74,11 +75,11 @@ const Faucet = () => {
             {isClaiming ? (
               <Button disabled>Claiming...</Button>
             ) : (
-              // hasUSDC ? (
-              //   <Button disabled>Assets Claimed</Button>
-              // ) : (
+              canClaim ? (
                 <Button onClick={claimHandler}>Claim Assets</Button>
-              // )
+              ) : (
+                <Button disabled>Assets Claimed</Button>
+              )
             )}
           </div>
 

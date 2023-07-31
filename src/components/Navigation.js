@@ -1,8 +1,11 @@
 /* #region Dependencies */
+
+import { useSelector, useDispatch } from 'react-redux'
+import { useEffect } from 'react'
+
 import Navbar from 'react-bootstrap/Navbar'
 import Button from 'react-bootstrap/Button'
 
-import { useSelector, useDispatch } from 'react-redux'
 import {
   loadAccount,
   loadUserBalances,
@@ -10,7 +13,6 @@ import {
   loadHolderVoteStatus,
   loadHolderOpenVoteStatus
 } from '../store/interactions'
-import { useEffect } from 'react'
 /* #endregion */
 
 const Navigation = () => {

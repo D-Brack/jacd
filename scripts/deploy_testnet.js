@@ -20,7 +20,7 @@ async function main() {
   console.log(`JACD Coin deployed to ${jacdToken.address}`)
 
   const USDCToken = await hre.ethers.getContractFactory('USDCToken')
-  const usdcToken = await USDCToken.deploy('USD Coin', 'USDC', 0)
+  const usdcToken = await USDCToken.deploy('Mock USD Coin', 'mUSDC', 0)
 
   console.log(`USDC Coin deployed to ${usdcToken.address}`)
 
@@ -66,7 +66,7 @@ async function main() {
   const collections = [jetpacks.address, hoverboards.address, avas.address]
 
   const JACD = await hre.ethers.getContractFactory('JACD')
-  const jacd = await JACD.deploy(jacdToken.address, usdcToken.address, collections, 10, 100, 3000, 1500, votes(2101), 86400, 86400)
+  const jacd = await JACD.deploy(jacdToken.address, usdcToken.address, collections, 10, 100, 3000, 2001, votes(2101), 86400, 86400)
 
   console.log(`JACD deployed to ${jacd.address}`)
 

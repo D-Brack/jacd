@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { ethers } from 'ethers'
 
 import Card from 'react-bootstrap/Card'
 import Table from 'react-bootstrap/Table'

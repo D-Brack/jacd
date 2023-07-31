@@ -8,7 +8,7 @@ import USDC_TOKEN_ABI from '../abis/USDCToken.json'
 import DAO_ABI from '../abis/JACD.json'
 import NFT_ABI from '../abis/NFT.json'
 
-import provider, {
+import {
   setConnection,
   setChainId,
   setAccount
@@ -126,7 +126,6 @@ export const loadDAOBalances = async (tokens, dao, dispatch) => {
 export const loadProposals = async (dao, dispatch) => {
   const count = await dao.proposalCount()
   let proposals = []
-  let proposal
 
   for(let i = 1; i <= count; i++) {
     proposals.push(await dao.proposals(i))
@@ -177,10 +176,8 @@ export const loadOpenProposals = (proposals, dispatch) => {
 
 export const loadHolderOpenVoteStatus = async (dao, openProposals, account, dispatch) => {
   let voteStatus = []
-  let index
 
   for(let i = 0; i < openProposals.length; i++) {
-    index = openProposals[i].index
     voteStatus.push(await dao.holderOpenVoted(openProposals[i].index, account))
   }
 
@@ -208,7 +205,6 @@ export const loadNFTContracts = async (provider, dao, dispatch) => {
   const collections = await dao.getCollections()
   let nfts = []
   let names = []
-  let balances = []
 
   for(let i = 0; i < collections.length; i++) {
     nfts.push(new ethers.Contract(collections[i], NFT_ABI, provider))
@@ -339,7 +335,7 @@ export const finalizeProposal = async (provider, dao, index) => {
 
 export const faucetRequest = async (provider, chainId, dao) => {
   try {
-    let transaction, amount
+    let transaction
 
     const signer = provider.getSigner()
     console.log(1)

@@ -1,6 +1,6 @@
 /* #region Dependencies */
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 
 import CardGroup from 'react-bootstrap/CardGroup'

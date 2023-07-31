@@ -18,7 +18,6 @@ async function main() {
   const jacdToken = await JACDToken.deploy('JACD Coin', 'JACD')
 
   console.log(`JACD Coin deployed to ${jacdToken.address}`)
-  console.log(await jacdToken.name())
 
   const USDCToken = await hre.ethers.getContractFactory('USDCToken')
   const usdcToken = await USDCToken.deploy('USD Coin', 'USDC', 0)
