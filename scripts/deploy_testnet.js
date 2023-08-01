@@ -66,7 +66,7 @@ async function main() {
   const collections = [jetpacks.address, hoverboards.address, avas.address]
 
   const JACD = await hre.ethers.getContractFactory('JACD')
-  const jacd = await JACD.deploy(jacdToken.address, usdcToken.address, collections, 10, 100, 3000, 2001, votes(2101), 86400, 86400)
+  const jacd = await JACD.deploy(jacdToken.address, usdcToken.address, collections, 10, 100, 3000, 2001, votes(210100), 86400, 86400)
 
   console.log(`JACD deployed to ${jacd.address}`)
 
