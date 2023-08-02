@@ -340,7 +340,7 @@ export const faucetRequest = async (provider, chainId, dao) => {
     const signer = provider.getSigner()
     console.log(1)
 
-    transaction = await dao.connect(signer).faucetRequest(config[chainId].deployer.address)
+    transaction = await dao.connect(signer).faucetRequest(config[chainId].manager.address)
     await transaction.wait()
     console.log(2)
 

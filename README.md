@@ -18,4 +18,5 @@ Instructions for setting up your own version of the NFT & token gated DAO:
         i.	Amount of time a proposal is open for voting during the holder voting stage.
         j.	Amount of time a proposal is open for voting during the open voting stage.
     5.	Transfer ownership of the JACD token to the DAO so it can control distributions for donations.
+    6.  Use addresses logged to console during deployment to populate the config.json address values
 

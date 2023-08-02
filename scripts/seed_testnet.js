@@ -7,7 +7,6 @@ const tokens = (amount) => {
 }
 
 const ether = tokens
-const votes = tokens
 
 const usdc = (amount) => {
   return amount * 10**6
@@ -28,6 +27,9 @@ async function main() {
   const deployerPrivateKey = privateKeys[0]
   const deployer = new hre.ethers.Wallet(deployerPrivateKey, provider)
 
+  const managerPrivateKey = privateKeys[1]
+  const manager = new hre.ethers.Wallet(managerPrivateKey, provider)
+
   console.log('fetching contracts...')
 
   const usdcToken = await hre.ethers.getContractAt('USDCToken', config[chainId].usdcToken.address)
@@ -40,7 +42,10 @@ async function main() {
 
   console.log('   USDC...')
 
-  transaction = await usdcToken.connect(deployer).mint(deployer.address, usdc(1001000))
+  transaction = await usdcToken.connect(deployer).mint(manager.address, usdc(1000000))
+  await transaction.wait()
+
+  transaction = await usdcToken.connect(deployer).mint(deployer.address, usdc(1000000))
   await transaction.wait()
 
   console.log('   Jetpacks...')
@@ -55,11 +60,11 @@ async function main() {
 
   console.log('   Hoverboards...')
 
-  transaction = await hoverboards.connect(deployer).addToWhitelist(deployer.address)
+  transaction = await hoverboards.connect(deployer).addToWhitelist(manager.address)
   await transaction.wait()
 
   for(let x = 0; x < 10; x++) {
-    transaction = await hoverboards.connect(deployer).mint(100, { value: ether(.01) })
+    transaction = await hoverboards.connect(manager).mint(100, { value: ether(.01) })
     await transaction.wait()
   }
 
@@ -75,15 +80,18 @@ async function main() {
 
   console.log('approve DAO to transfer assets...')
 
-  transaction = await usdcToken.connect(deployer).approve(dao.address, usdc(1000000))
+  transaction = await usdcToken.connect(manager).approve(dao.address, usdc(1000000))
   await transaction.wait()
 
-  transaction = await hoverboards.connect(deployer).setApprovalForAll(dao.address, true)
+  transaction = await hoverboards.connect(manager).setApprovalForAll(dao.address, true)
   await transaction.wait()
 
   console.log('deposit USDC...')
 
-  transaction = await dao.connect(deployer).receiveDeposit(usdc(1000))
+  transaction = await usdcToken.connect(deployer).approve(dao.address, usdc(100000))
+  await transaction.wait()
+
+  transaction = await dao.connect(deployer).receiveDeposit(usdc(100000))
   await transaction.wait()
 
   console.log('finished!')
