@@ -89,6 +89,12 @@ const Faucet = () => {
             <li><a target="_blank" rel='noreferrer' href='https://faucet.quicknode.com/ethereum/sepolia'>QuickNode</a></li>
             <li><a target="_blank" rel='noreferrer' href='https://www.infura.io/faucet/sepolia'>Infura</a></li>
           </ul>
+
+          <strong className='mx-3'>Token Addresses</strong>
+          <ul className='ms-3'>
+            <li><span className='underline'>mUSDC: </span>0xA0B5DACf8a20F7Fd8B561b585148123c8705b4f1</li>
+            <li><span className='underline'>JACD: </span>0xa787F9Ef5e6E80b93F92E68c3007Fa8b6cE1Aa22</li>
+          </ul>
         </>
       )}
     </>
