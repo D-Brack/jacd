@@ -7,7 +7,7 @@ import Button from 'react-bootstrap/Button'
 import Row from 'react-bootstrap/Row'
 import Col from 'react-bootstrap/Col'
 
-import demo from '../demo.mp4'
+import demo from '../demo1.mp4'
 
 import {
   loadUserBalances,
