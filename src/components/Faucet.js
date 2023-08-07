@@ -4,8 +4,6 @@ import { useDispatch, useSelector } from 'react-redux'
 import { useState, useEffect } from 'react'
 
 import Button from 'react-bootstrap/Button'
-import Row from 'react-bootstrap/Row'
-import Col from 'react-bootstrap/Col'
 
 import demo from '../demo1.mp4'
 
