@@ -4,6 +4,10 @@ import { useDispatch, useSelector } from 'react-redux'
 import { useState, useEffect } from 'react'
 
 import Button from 'react-bootstrap/Button'
+import Row from 'react-bootstrap/Row'
+import Col from 'react-bootstrap/Col'
+
+import demo from '../demo.mp4'
 
 import {
   loadUserBalances,
@@ -69,7 +73,7 @@ const Faucet = () => {
         <>
           <hr />
 
-          <div className='mb-3'>
+          <div className='my-2' style={{ width: '700px', float: 'left' }}>
             <p className='d-inline-block mx-3' ><strong>{`Claim ${symbols[1]} & NFT assets for app testing`}</strong></p>
 
             {isClaiming ? (
@@ -81,22 +85,35 @@ const Faucet = () => {
                 <Button disabled>Assets Claimed</Button>
               )
             )}
+
+            <br />
+            <br />
+
+            <strong className='mx-3' >Sepolia Testnet Ether Faucets</strong>
+            <ul className='ms-3'>
+              <li><a target="_blank" rel='noreferrer' href='https://sepoliafaucet.com'>Alchemy</a></li>
+              <li><a target="_blank" rel='noreferrer' href='https://faucet.quicknode.com/ethereum/sepolia'>QuickNode</a></li>
+              <li><a target="_blank" rel='noreferrer' href='https://www.infura.io/faucet/sepolia'>Infura</a></li>
+            </ul>
+
+            <br />
+
+            <strong className='mx-3'>Token Addresses</strong>
+            <ul className='ms-3'>
+              <li><span className='underline'>mUSDC: </span>0xA0B5DACf8a20F7Fd8B561b585148123c8705b4f1</li>
+              <li><span className='underline'>JACD: </span>0xa787F9Ef5e6E80b93F92E68c3007Fa8b6cE1Aa22</li>
+            </ul>
           </div>
-
-          <strong className='mx-3' >Sepolia Testnet Ether Faucets</strong>
-          <ul className='ms-3'>
-            <li><a target="_blank" rel='noreferrer' href='https://sepoliafaucet.com'>Alchemy</a></li>
-            <li><a target="_blank" rel='noreferrer' href='https://faucet.quicknode.com/ethereum/sepolia'>QuickNode</a></li>
-            <li><a target="_blank" rel='noreferrer' href='https://www.infura.io/faucet/sepolia'>Infura</a></li>
-          </ul>
-
-          <strong className='mx-3'>Token Addresses</strong>
-          <ul className='ms-3'>
-            <li><span className='underline'>mUSDC: </span>0xA0B5DACf8a20F7Fd8B561b585148123c8705b4f1</li>
-            <li><span className='underline'>JACD: </span>0xa787F9Ef5e6E80b93F92E68c3007Fa8b6cE1Aa22</li>
-          </ul>
         </>
       )}
+
+      <div className='mb-3' style={{ float: 'right' }}>
+        <h3 className='text-center'><strong>Demo Video</strong></h3>
+        <video controls height={281} width={500} style={{ border: '1px solid black' }}>
+          <source src={demo} type="video/mp4" />
+          Your browser does not support the video tag.
+        </video>
+      </div>
     </>
   )
 }
