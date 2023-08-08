@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react'
 
 import Button from 'react-bootstrap/Button'
 
-import demo from '../demo1.mp4'
+import demo from '../demo_vid.mp4'
 
 import {
   loadUserBalances,
