@@ -28,6 +28,7 @@ coverage
 coverage.json
 typechain
 typechain-types
+git-filter-repo
 
 NOTES.txt
 
